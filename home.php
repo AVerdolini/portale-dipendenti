@@ -97,11 +97,12 @@ $(function () {
 
         var doc = documentiBustaPaga[indice];
         if (doc) {
-            $('#dettaglio-documento-corrente').html(
-                '<a class="btn btn-primary btn-sm w-full" href="/portale-dipendenti/scarica-documento.php?id=' + doc.id + '">' +
-                'Scarica ' + (doc.etichetta || 'documento') + ' ' + doc.mese + '-' + doc.anno +
-                '</a>'
-            );
+            var $link = $('<a>', {
+                'class': 'btn btn-primary btn-sm w-full',
+                'href': '/portale-dipendenti/scarica-documento.php?id=' + encodeURIComponent(doc.id),
+                'text': 'Scarica ' + (doc.etichetta || 'documento') + ' ' + doc.mese + '-' + doc.anno
+            });
+            $('#dettaglio-documento-corrente').empty().append($link);
         }
     }
 
