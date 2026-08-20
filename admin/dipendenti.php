@@ -87,7 +87,6 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
             <div class="alert alert-success mb-4 text-sm">
                 Dipendente <?= htmlspecialchars($nomeNuovoDipendente) ?> creato. Password temporanea:
                 <strong><?= htmlspecialchars($passwordGenerata) ?></strong>
-                — comunicala fuori banda, non verra' mostrata di nuovo.
             </div>
         <?php endif; ?>
         <?php if ($errore): ?>
@@ -160,10 +159,7 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
         <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
-        <h3 class="font-semibold text-lg mb-4">Nuova password temporanea</h3>
-        <p class="text-sm text-base-content/70 mb-3">
-            Comunicala fuori banda al dipendente — non verra' mostrata di nuovo.
-        </p>
+        <h3 class="font-semibold text-lg mb-4">Password temporanea</h3>
         <div class="flex gap-2">
             <input type="text" id="valore-password-generata" readonly class="input input-bordered w-full font-mono">
             <button type="button" class="btn" id="btn-copia-password">Copia</button>
