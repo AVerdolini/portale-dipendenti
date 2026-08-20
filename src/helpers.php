@@ -34,3 +34,20 @@ function generaPasswordTemporanea(int $lunghezza = 10): string
     }
     return $password;
 }
+
+function csrf_token(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_verify(): void
+{
+    $token = $_POST['csrf_token'] ?? '';
+    if (!isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+        http_response_code(403);
+        exit('Richiesta non valida (token di sicurezza mancante o scaduto). Torna indietro e riprova.');
+    }
+}

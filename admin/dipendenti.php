@@ -11,6 +11,7 @@ $passwordGenerata = null;
 $nomeNuovoDipendente = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'crea') {
+    csrf_verify();
     $nome = trim($_POST['nome'] ?? '');
     $cognome = trim($_POST['cognome'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -74,6 +75,7 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
 
     <form method="post" class="card bg-base-100 shadow p-6 flex flex-col gap-3">
         <h2 class="font-semibold">Nuovo dipendente</h2>
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
         <input type="hidden" name="azione" value="crea">
         <input type="text" name="nome" placeholder="Nome" required class="input input-bordered w-full">
         <input type="text" name="cognome" placeholder="Cognome" required class="input input-bordered w-full">

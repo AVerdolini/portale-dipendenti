@@ -7,6 +7,7 @@ $errore = null;
 $obbligatorio = (bool) $utente['deve_cambiare_password'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
     $nuova = $_POST['nuova_password'] ?? '';
     $conferma = $_POST['conferma_password'] ?? '';
 
@@ -39,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-error text-sm"><?= htmlspecialchars($errore) ?></div>
             <?php endif; ?>
             <form method="post" class="flex flex-col gap-3">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <input type="password" name="nuova_password" placeholder="Nuova password" required minlength="8" class="input input-bordered w-full">
                 <input type="password" name="conferma_password" placeholder="Conferma password" required minlength="8" class="input input-bordered w-full">
                 <button type="submit" class="btn btn-primary w-full">Salva</button>

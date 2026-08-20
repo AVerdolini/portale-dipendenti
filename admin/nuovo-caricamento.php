@@ -9,9 +9,10 @@ require_admin();
 $errore = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
     $tipoDocumento = $_POST['tipo_documento'] ?? '';
     $etichetta = $_POST['etichetta'] ?? null;
-    $mese = $_POST['mese'] !== '' ? (int) $_POST['mese'] : null;
+    $mese = ($_POST['mese'] ?? '') !== '' ? (int) $_POST['mese'] : null;
     $anno = (int) ($_POST['anno'] ?? 0);
 
     if (!in_array($tipoDocumento, ['busta_paga', 'cu'], true)) {
@@ -26,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errore = 'Carica un file PDF valido.';
     } elseif (strtolower(pathinfo($_FILES['pdf']['name'], PATHINFO_EXTENSION)) !== 'pdf') {
         $errore = 'Il file deve essere un PDF.';
+    } elseif ((new finfo(FILEINFO_MIME_TYPE))->file($_FILES['pdf']['tmp_name']) !== 'application/pdf') {
+        $errore = 'Il file non è un PDF valido.';
     } else {
         $cartellaOriginali = __DIR__ . '/../storage/originali';
         if (!is_dir($cartellaOriginali)) {
@@ -66,6 +69,7 @@ layout_admin_inizio('Nuovo caricamento', 'nuovo-caricamento');
 <?php endif; ?>
 
 <form method="post" enctype="multipart/form-data" class="card bg-base-100 shadow p-6 max-w-lg flex flex-col gap-4" id="form-caricamento">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
     <div>
         <label class="label"><span class="label-text">Tipo documento</span></label>
         <select name="tipo_documento" id="tipo_documento" class="select select-bordered w-full" required>

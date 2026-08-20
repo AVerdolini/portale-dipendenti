@@ -19,6 +19,7 @@ $passwordGenerata = null;
 $errore = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
     $azione = $_POST['azione'] ?? '';
 
     if ($azione === 'aggiorna') {
@@ -72,6 +73,7 @@ layout_admin_inizio('Modifica dipendente', 'dipendenti');
 
 <div class="card bg-base-100 shadow p-6 max-w-lg flex flex-col gap-4">
     <form method="post" class="flex flex-col gap-3">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
         <input type="hidden" name="id" value="<?= $dipendente['id'] ?>">
         <input type="hidden" name="azione" value="aggiorna">
         <input type="text" name="nome" value="<?= htmlspecialchars($dipendente['nome']) ?>" required class="input input-bordered w-full">
@@ -82,6 +84,7 @@ layout_admin_inizio('Modifica dipendente', 'dipendenti');
     </form>
 
     <form method="post">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
         <input type="hidden" name="id" value="<?= $dipendente['id'] ?>">
         <input type="hidden" name="azione" value="reset_password">
         <button type="submit" class="btn btn-outline w-full">Genera nuova password</button>
@@ -89,12 +92,14 @@ layout_admin_inizio('Modifica dipendente', 'dipendenti');
 
     <?php if ($dipendente['attivo']): ?>
         <form method="post">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
             <input type="hidden" name="id" value="<?= $dipendente['id'] ?>">
             <input type="hidden" name="azione" value="disattiva">
             <button type="submit" class="btn btn-error btn-outline w-full">Disattiva</button>
         </form>
     <?php else: ?>
         <form method="post">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
             <input type="hidden" name="id" value="<?= $dipendente['id'] ?>">
             <input type="hidden" name="azione" value="attiva">
             <button type="submit" class="btn btn-success btn-outline w-full">Riattiva</button>

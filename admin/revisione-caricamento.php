@@ -54,6 +54,15 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
 <?php if (($_GET['errore'] ?? '') === 'sovrascrivi_fallito'): ?>
     <div class="alert alert-error mb-4">Impossibile sovrascrivere: il conflitto non e' piu' valido (probabilmente gia' risolto). La pagina resta in attesa di revisione.</div>
 <?php endif; ?>
+<?php if (($_GET['errore'] ?? '') === 'assegna_conflitto'): ?>
+    <div class="alert alert-error mb-4">Impossibile assegnare: il dipendente selezionato ha gia' un documento per lo stesso periodo. La pagina resta in attesa di revisione.</div>
+<?php endif; ?>
+<?php if (($_GET['errore'] ?? '') === 'assegna_dipendente_non_valido'): ?>
+    <div class="alert alert-error mb-4">Impossibile assegnare: il dipendente selezionato non e' valido o non e' piu' attivo. La pagina resta in attesa di revisione.</div>
+<?php endif; ?>
+<?php if (($_GET['errore'] ?? '') === 'elaborazione_fallita'): ?>
+    <div class="alert alert-error mb-4">Si e' verificato un errore durante l'elaborazione del file caricato (potrebbe essere danneggiato o non valido). Il caricamento e' stato marcato come "con errori".</div>
+<?php endif; ?>
 
 <div class="grid grid-cols-2 gap-6">
     <div class="flex flex-col gap-6 overflow-y-auto" style="max-height: 75vh">
@@ -88,6 +97,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                         <td><?= htmlspecialchars($pagina['cf_estratto'] ?? '(non trovato)') ?></td>
                         <td onclick="event.stopPropagation()">
                             <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="flex gap-2 items-center">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <input type="hidden" name="azione" value="assegna">
                                 <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
                                 <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
@@ -99,6 +109,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                                 <button type="submit" class="btn btn-xs btn-primary">Assegna</button>
                             </form>
                             <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="inline">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <input type="hidden" name="azione" value="scarta_pagina">
                                 <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
                                 <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
@@ -126,12 +137,14 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                         <td><?= htmlspecialchars($conflitto['utente_match']['cognome'] . ' ' . $conflitto['utente_match']['nome']) ?></td>
                         <td onclick="event.stopPropagation()">
                             <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="inline">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <input type="hidden" name="azione" value="sovrascrivi">
                                 <input type="hidden" name="pagina_id" value="<?= $conflitto['id'] ?>">
                                 <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
                                 <button type="submit" class="btn btn-xs btn-warning">Sovrascrivi</button>
                             </form>
                             <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="inline">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <input type="hidden" name="azione" value="ignora"><input type="hidden" name="pagina_id" value="<?= $conflitto['id'] ?>">
                                 <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
                                 <button type="submit" class="btn btn-xs">Ignora</button>
