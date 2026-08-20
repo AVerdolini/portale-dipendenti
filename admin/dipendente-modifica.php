@@ -16,19 +16,28 @@ if ($dipendente === null) {
 
 $messaggio = null;
 $passwordGenerata = null;
+$errore = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $azione = $_POST['azione'] ?? '';
 
     if ($azione === 'aggiorna') {
-        Utente::update(
-            $dipendenteId,
-            trim($_POST['nome'] ?? ''),
-            trim($_POST['cognome'] ?? ''),
-            trim($_POST['email'] ?? ''),
-            trim($_POST['codice_fiscale'] ?? '')
-        );
-        $messaggio = 'Dati aggiornati.';
+        $nome = trim($_POST['nome'] ?? '');
+        $cognome = trim($_POST['cognome'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $codiceFiscale = trim($_POST['codice_fiscale'] ?? '');
+
+        $utenteConStessaEmail = Utente::findByEmail($email);
+        $utenteConStessoCf = Utente::findByCodiceFiscale($codiceFiscale);
+
+        if ($utenteConStessaEmail !== null && (int) $utenteConStessaEmail['id'] !== $dipendenteId) {
+            $errore = 'Esiste gia\' un utente con questa email.';
+        } elseif ($utenteConStessoCf !== null && (int) $utenteConStessoCf['id'] !== $dipendenteId) {
+            $errore = 'Esiste gia\' un utente con questo codice fiscale.';
+        } else {
+            Utente::update($dipendenteId, $nome, $cognome, $email, $codiceFiscale);
+            $messaggio = 'Dati aggiornati.';
+        }
     } elseif ($azione === 'reset_password') {
         $nuovaPassword = generaPasswordTemporanea();
         Utente::setPassword($dipendenteId, $nuovaPassword, true);
@@ -50,6 +59,9 @@ layout_admin_inizio('Modifica dipendente', 'dipendenti');
 
 <?php if ($messaggio): ?>
     <div class="alert alert-success mb-4"><?= htmlspecialchars($messaggio) ?></div>
+<?php endif; ?>
+<?php if ($errore): ?>
+    <div class="alert alert-error mb-4"><?= htmlspecialchars($errore) ?></div>
 <?php endif; ?>
 <?php if ($passwordGenerata): ?>
     <div class="alert alert-success mb-4">
