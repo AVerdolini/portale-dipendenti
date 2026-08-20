@@ -93,9 +93,11 @@ $(function () {
         });
     });
 
-    // Pulsante "Copia" nel modale password generata.
-    $(document).on('click', '#btn-copia-password', function () {
-        var $campo = $('#valore-password-generata');
+    // Pulsante "Copia" accanto a un campo password temporanea (usato sia nel
+    // modale "Nuovo dipendente" che nel modale "Password temporanea" del
+    // reset password) — il target e' indicato dall'attributo data-target.
+    $(document).on('click', '.btn-copia-password', function () {
+        var $campo = $('#' + $(this).data('target'));
         $campo.get(0).select();
         navigator.clipboard.writeText($campo.val()).catch(function () {
             document.execCommand('copy');

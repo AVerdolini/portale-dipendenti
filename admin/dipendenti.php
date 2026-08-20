@@ -84,9 +84,10 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
         <h3 class="font-semibold text-lg mb-4">Nuovo dipendente</h3>
 
         <?php if ($passwordGenerata): ?>
-            <div class="alert alert-success mb-4 text-sm">
-                Dipendente <?= htmlspecialchars($nomeNuovoDipendente) ?> creato. Password temporanea:
-                <strong><?= htmlspecialchars($passwordGenerata) ?></strong>
+            <p class="text-sm mb-2">Dipendente <?= htmlspecialchars($nomeNuovoDipendente) ?> creato. Password temporanea:</p>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="valore-password-nuovo-dipendente" readonly value="<?= htmlspecialchars($passwordGenerata) ?>" class="input input-bordered w-full font-mono">
+                <button type="button" class="btn btn-copia-password" data-target="valore-password-nuovo-dipendente">Copia</button>
             </div>
         <?php endif; ?>
         <?php if ($errore): ?>
@@ -162,7 +163,7 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
         <h3 class="font-semibold text-lg mb-4">Password temporanea</h3>
         <div class="flex gap-2">
             <input type="text" id="valore-password-generata" readonly class="input input-bordered w-full font-mono">
-            <button type="button" class="btn" id="btn-copia-password">Copia</button>
+            <button type="button" class="btn btn-copia-password" data-target="valore-password-generata">Copia</button>
         </div>
     </div>
     <form method="dialog" class="modal-backdrop">
