@@ -97,11 +97,41 @@ $(function () {
     // modale "Nuovo dipendente" che nel modale "Password temporanea" del
     // reset password) — il target e' indicato dall'attributo data-target.
     $(document).on('click', '.btn-copia-password', function () {
-        var $campo = $('#' + $(this).data('target'));
-        $campo.get(0).select();
-        navigator.clipboard.writeText($campo.val()).catch(function () {
-            document.execCommand('copy');
-        });
+        var $bottone = $(this);
+        var $campo = $('#' + $bottone.data('target'));
+        var testoOriginale = $bottone.text();
+
+        function segnalaCopiaRiuscita() {
+            $bottone.text('Copiato!');
+            setTimeout(function () {
+                $bottone.text(testoOriginale);
+            }, 1500);
+        }
+
+        // navigator.clipboard esiste solo in un contesto sicuro (HTTPS o
+        // localhost) — su http://portale-dipendenti.local (HTTP semplice)
+        // e' undefined, quindi va sempre verificato prima di chiamarlo:
+        // chiamare .writeText() su undefined lancia un TypeError sincrono
+        // che una .catch() (pensata per una Promise rifiutata) non
+        // intercetta, interrompendo lo script silenziosamente.
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText($campo.val()).then(segnalaCopiaRiuscita).catch(function () {
+                copiaConSelezione();
+            });
+        } else {
+            copiaConSelezione();
+        }
+
+        function copiaConSelezione() {
+            $campo.get(0).select();
+            $campo.get(0).setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                segnalaCopiaRiuscita();
+            } catch (e) {
+                $bottone.text('Copia manualmente');
+            }
+        }
     });
 
     // Il modale "Nuovo dipendente" mostra l'esito (password generata o
