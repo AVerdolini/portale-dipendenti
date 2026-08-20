@@ -103,4 +103,24 @@ $(function () {
             document.execCommand('copy');
         });
     });
+
+    // Il modale "Nuovo dipendente" mostra l'esito (password generata o
+    // errore) di un submit PHP classico (POST -> redirect -> GET), quindi
+    // quel markup e' fisso finche' la pagina non si ricarica per intero.
+    // Se pero' l'admin chiude il modale e lo riapre SENZA ricaricare la
+    // pagina (es. dopo aver fatto altre azioni via AJAX nel frattempo, che
+    // non toccano questo HTML), il vecchio esito resterebbe visibile.
+    // Alla chiusura del modale rimuoviamo quindi l'esito dal DOM e
+    // ripristiniamo il form vuoto, cosi' una riapertura mostra sempre un
+    // form pulito a meno che non sia appena arrivato un nuovo esito reale
+    // (nel qual caso il modale si apre gia' con l'attributo "open" al
+    // caricamento della pagina, prima che questo listener possa intervenire).
+    var modaleNuovoDipendente = document.getElementById('modale-nuovo-dipendente');
+    if (modaleNuovoDipendente) {
+        modaleNuovoDipendente.addEventListener('close', function () {
+            var $modale = $(modaleNuovoDipendente);
+            $modale.find('.esito-creazione-dipendente').remove();
+            $modale.find('.form-nuovo-dipendente').show().get(0).reset();
+        });
+    }
 });

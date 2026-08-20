@@ -97,19 +97,22 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
         </form>
         <h3 class="font-semibold text-lg mb-4">Nuovo dipendente</h3>
 
-        <?php if ($passwordGenerata): ?>
-            <p class="text-sm mb-2">Dipendente <?= htmlspecialchars($nomeNuovoDipendente) ?> creato. Password temporanea:</p>
-            <div class="flex gap-2 mb-4">
-                <input type="text" id="valore-password-nuovo-dipendente" readonly value="<?= htmlspecialchars($passwordGenerata) ?>" class="input input-bordered w-full font-mono">
-                <button type="button" class="btn btn-copia-password" data-target="valore-password-nuovo-dipendente">Copia</button>
-            </div>
-        <?php endif; ?>
-        <?php if ($errore): ?>
-            <div class="alert alert-error mb-4 text-sm"><?= htmlspecialchars($errore) ?></div>
+        <?php if ($passwordGenerata || $errore): ?>
+        <div class="esito-creazione-dipendente">
+            <?php if ($passwordGenerata): ?>
+                <p class="text-sm mb-2">Dipendente <?= htmlspecialchars($nomeNuovoDipendente) ?> creato. Password temporanea:</p>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="valore-password-nuovo-dipendente" readonly value="<?= htmlspecialchars($passwordGenerata) ?>" class="input input-bordered w-full font-mono">
+                    <button type="button" class="btn btn-copia-password" data-target="valore-password-nuovo-dipendente">Copia</button>
+                </div>
+            <?php endif; ?>
+            <?php if ($errore): ?>
+                <div class="alert alert-error mb-4 text-sm"><?= htmlspecialchars($errore) ?></div>
+            <?php endif; ?>
+        </div>
         <?php endif; ?>
 
-        <?php if (!$passwordGenerata): ?>
-        <form method="post" class="flex flex-col gap-3">
+        <form method="post" class="flex flex-col gap-3 form-nuovo-dipendente" <?= $passwordGenerata ? 'style="display:none"' : '' ?>>
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
             <input type="hidden" name="azione" value="crea">
             <input type="text" name="nome" placeholder="Nome" required class="input input-bordered w-full">
@@ -118,7 +121,6 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
             <input type="text" name="codice_fiscale" placeholder="Codice Fiscale" required maxlength="16" class="input input-bordered w-full">
             <button type="submit" class="btn btn-primary">Crea</button>
         </form>
-        <?php endif; ?>
     </div>
     <form method="dialog" class="modal-backdrop">
         <button>chiudi</button>
