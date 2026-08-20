@@ -25,21 +25,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'crea'
         $errore = 'Esiste gia\' un utente con questo codice fiscale.';
     } else {
         $risultato = Utente::create($nome, $cognome, $email, $codiceFiscale, 'dipendente');
-        $passwordGenerata = $risultato['password_temporanea'];
-        $nomeNuovoDipendente = "$nome $cognome";
+        // Pattern POST -> redirect -> GET: l'esito viaggia in sessione (mai
+        // in URL, la password non deve finire in query string/cronologia) e
+        // viene consumato una sola volta al prossimo GET. Cosi' un refresh
+        // (F5) della pagina dopo la creazione non ripete il submit ne'
+        // rimostra la password gia' vista.
+        $_SESSION['dipendente_creato'] = [
+            'password_temporanea' => $risultato['password_temporanea'],
+            'nome_completo' => "$nome $cognome",
+        ];
+        redirect('/portale-dipendenti/admin/dipendenti.php');
     }
+}
+
+if (isset($_SESSION['dipendente_creato'])) {
+    $passwordGenerata = $_SESSION['dipendente_creato']['password_temporanea'];
+    $nomeNuovoDipendente = $_SESSION['dipendente_creato']['nome_completo'];
+    unset($_SESSION['dipendente_creato']);
 }
 
 $dipendenti = Utente::all();
 
-// Il modale "Nuovo dipendente" si riapre automaticamente se il submit ha
-// prodotto un esito (successo o errore) da mostrare all'admin. E' l'unico
-// caso rimasto con un POST/redirect classico: la creazione resta una
-// pagina piena di form nuovo, senza dati preesistenti da aggiornare via
-// AJAX. Le azioni su un dipendente esistente (modifica, reset password,
-// attiva/disattiva) invece passano tutte da admin/dipendente-modifica.php
-// via fetch, gestite da public/assets/js/app.js — niente redirect, solo
-// toast di conferma e aggiornamento della riga in tabella.
+// Il modale "Nuovo dipendente" si riapre automaticamente se c'e' un esito da
+// mostrare: un errore di validazione (POST appena rifiutato, resta nella
+// stessa richiesta) oppure una password appena generata (letta dalla
+// sessione dopo il redirect post-creazione, vedi sopra). Le azioni su un
+// dipendente esistente (modifica, reset password, attiva/disattiva) invece
+// passano tutte da admin/dipendente-modifica.php via fetch, gestite da
+// public/assets/js/app.js — niente redirect, solo toast di conferma e
+// aggiornamento della riga in tabella.
 $riapriModaleCreazione = $passwordGenerata !== null || $errore !== null;
 
 layout_admin_inizio('Dipendenti', 'dipendenti');
