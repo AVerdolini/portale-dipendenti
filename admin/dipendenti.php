@@ -33,15 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'crea'
 $dipendenti = Utente::all();
 
 // Il modale "Nuovo dipendente" si riapre automaticamente se il submit ha
-// prodotto un esito (successo o errore) da mostrare all'admin.
+// prodotto un esito (successo o errore) da mostrare all'admin. E' l'unico
+// caso rimasto con un POST/redirect classico: la creazione resta una
+// pagina piena di form nuovo, senza dati preesistenti da aggiornare via
+// AJAX. Le azioni su un dipendente esistente (modifica, reset password,
+// attiva/disattiva) invece passano tutte da admin/dipendente-modifica.php
+// via fetch, gestite da public/assets/js/app.js — niente redirect, solo
+// toast di conferma e aggiornamento della riga in tabella.
 $riapriModaleCreazione = $passwordGenerata !== null || $errore !== null;
-
-// Esito di un'azione fatta nel modale "Modifica dipendente" (redirect da
-// admin/dipendente-modifica.php): se presente, riapre il modale del
-// dipendente interessato mostrando il messaggio.
-$modificaEsito = $_GET['modifica_esito'] ?? null;
-$modificaMessaggio = $_GET['modifica_messaggio'] ?? null;
-$modificaId = isset($_GET['modifica_id']) ? (int) $_GET['modifica_id'] : null;
 
 layout_admin_inizio('Dipendenti', 'dipendenti');
 ?>
@@ -56,11 +55,11 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
     <thead><tr><th>Nome</th><th>Email</th><th>CF</th><th>Stato</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($dipendenti as $d): ?>
-        <tr class="hover">
-            <td><?= htmlspecialchars($d['cognome'] . ' ' . $d['nome']) ?></td>
-            <td><?= htmlspecialchars($d['email']) ?></td>
-            <td><?= htmlspecialchars($d['codice_fiscale']) ?></td>
-            <td>
+        <tr class="hover" id="riga-dipendente-<?= $d['id'] ?>">
+            <td class="cella-nome"><?= htmlspecialchars($d['cognome'] . ' ' . $d['nome']) ?></td>
+            <td class="cella-email"><?= htmlspecialchars($d['email']) ?></td>
+            <td class="cella-cf"><?= htmlspecialchars($d['codice_fiscale']) ?></td>
+            <td class="cella-stato">
                 <span class="badge <?= $d['attivo'] ? 'badge-success' : 'badge-ghost' ?>">
                     <?= $d['attivo'] ? 'Attivo' : 'Disattivato' ?>
                 </span>
@@ -113,26 +112,15 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
 </dialog>
 
 <?php foreach ($dipendenti as $d): ?>
-    <?php $mostraEsitoQui = $modificaId === (int) $d['id']; ?>
-    <dialog id="modale-modifica-<?= $d['id'] ?>" class="modal" <?= $mostraEsitoQui ? 'open' : '' ?>>
+    <dialog id="modale-modifica-<?= $d['id'] ?>" class="modal">
         <div class="modal-box">
             <form method="dialog">
                 <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
             </form>
             <h3 class="font-semibold text-lg mb-4">Modifica dipendente</h3>
+            <div class="messaggio-azione"></div>
 
-            <?php if ($mostraEsitoQui && $modificaEsito === 'password'): ?>
-                <div class="alert alert-success mb-4 text-sm">
-                    Nuova password temporanea: <strong><?= htmlspecialchars($modificaMessaggio) ?></strong>
-                    — comunicala fuori banda, non verra' mostrata di nuovo.
-                </div>
-            <?php elseif ($mostraEsitoQui && $modificaEsito === 'errore'): ?>
-                <div class="alert alert-error mb-4 text-sm"><?= htmlspecialchars($modificaMessaggio) ?></div>
-            <?php elseif ($mostraEsitoQui && $modificaEsito === 'ok' && $modificaMessaggio): ?>
-                <div class="alert alert-success mb-4 text-sm"><?= htmlspecialchars($modificaMessaggio) ?></div>
-            <?php endif; ?>
-
-            <form method="post" action="/portale-dipendenti/admin/dipendente-modifica.php" class="flex flex-col gap-3 mb-3">
+            <form class="form-azione-dipendente flex flex-col gap-3 mb-3" data-azione="aggiorna" data-successo="chiudi">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <input type="hidden" name="id" value="<?= $d['id'] ?>">
                 <input type="hidden" name="azione" value="aggiorna">
@@ -143,33 +131,49 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
                 <button type="submit" class="btn btn-primary">Salva</button>
             </form>
 
-            <form method="post" action="/portale-dipendenti/admin/dipendente-modifica.php" class="mb-3">
+            <form class="form-azione-dipendente mb-3" data-azione="reset_password" data-successo="password">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <input type="hidden" name="id" value="<?= $d['id'] ?>">
                 <input type="hidden" name="azione" value="reset_password">
                 <button type="submit" class="btn btn-outline w-full">Genera nuova password</button>
             </form>
 
-            <?php if ($d['attivo']): ?>
-                <form method="post" action="/portale-dipendenti/admin/dipendente-modifica.php">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                    <input type="hidden" name="id" value="<?= $d['id'] ?>">
-                    <input type="hidden" name="azione" value="disattiva">
+            <form class="form-azione-dipendente form-toggle-stato" data-azione="<?= $d['attivo'] ? 'disattiva' : 'attiva' ?>" data-successo="chiudi">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                <input type="hidden" name="id" value="<?= $d['id'] ?>">
+                <input type="hidden" name="azione" value="<?= $d['attivo'] ? 'disattiva' : 'attiva' ?>">
+                <?php if ($d['attivo']): ?>
                     <button type="submit" class="btn btn-error btn-outline w-full">Disattiva</button>
-                </form>
-            <?php else: ?>
-                <form method="post" action="/portale-dipendenti/admin/dipendente-modifica.php">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                    <input type="hidden" name="id" value="<?= $d['id'] ?>">
-                    <input type="hidden" name="azione" value="attiva">
+                <?php else: ?>
                     <button type="submit" class="btn btn-success btn-outline w-full">Riattiva</button>
-                </form>
-            <?php endif; ?>
+                <?php endif; ?>
+            </form>
         </div>
         <form method="dialog" class="modal-backdrop">
             <button>chiudi</button>
         </form>
     </dialog>
 <?php endforeach; ?>
+
+<dialog id="modale-password-generata" class="modal">
+    <div class="modal-box">
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="font-semibold text-lg mb-4">Nuova password temporanea</h3>
+        <p class="text-sm text-base-content/70 mb-3">
+            Comunicala fuori banda al dipendente — non verra' mostrata di nuovo.
+        </p>
+        <div class="flex gap-2">
+            <input type="text" id="valore-password-generata" readonly class="input input-bordered w-full font-mono">
+            <button type="button" class="btn" id="btn-copia-password">Copia</button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>chiudi</button>
+    </form>
+</dialog>
+
+<div id="toast-container" class="toast toast-end z-50"></div>
 <?php
 layout_admin_fine();
