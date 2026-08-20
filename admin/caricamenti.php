@@ -170,7 +170,7 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
             <td><?= $c['mese'] !== null ? formatMese((int) $c['mese']) . ' ' : '' ?><?= $c['anno'] ?></td>
             <td>
                 <span class="badge <?= $c['stato'] === 'completato' ? 'badge-success' : ($c['stato'] === 'con_errori' ? 'badge-warning' : 'badge-ghost') ?>">
-                    <?= htmlspecialchars($c['stato']) ?>
+                    <?= htmlspecialchars(formatStatoCaricamento($c['stato'])) ?>
                 </span>
             </td>
             <td><?= htmlspecialchars($c['nome_file_originale']) ?></td>

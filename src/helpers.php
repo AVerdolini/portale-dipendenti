@@ -25,6 +25,16 @@ function formatMese(?int $mese): string
     return $mese !== null ? ($nomi[$mese] ?? '') : '';
 }
 
+function formatStatoCaricamento(string $stato): string
+{
+    $etichette = [
+        'completato' => 'Completato',
+        'con_errori' => 'Con errori',
+        'elaborazione' => 'In elaborazione',
+    ];
+    return $etichette[$stato] ?? $stato;
+}
+
 function generaPasswordTemporanea(int $lunghezza = 10): string
 {
     $caratteri = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
