@@ -43,9 +43,11 @@ CREATE TABLE documenti (
     netto_in_busta DECIMAL(10,2) NULL,
     stato ENUM('associato', 'da_rivedere', 'scartato') NOT NULL DEFAULT 'associato',
     creato_il DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    utente_id_se_associato INT AS (IF(stato = 'associato', utente_id, NULL)) VIRTUAL,
     FOREIGN KEY (caricamento_id) REFERENCES caricamenti(id),
     FOREIGN KEY (utente_id) REFERENCES utenti(id),
-    UNIQUE KEY uq_documento_periodo (utente_id, tipo_documento, etichetta, mese, anno)
+    INDEX idx_utente_id (utente_id),
+    UNIQUE KEY uq_documento_periodo (utente_id_se_associato, tipo_documento, etichetta, mese, anno)
 ) ENGINE=InnoDB;
 
 CREATE TABLE pagine_non_associate (
