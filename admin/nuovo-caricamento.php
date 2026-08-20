@@ -33,20 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $nomeFile = uniqid('originale_', true) . '.pdf';
         $percorsoDestinazione = $cartellaOriginali . '/' . $nomeFile;
-        move_uploaded_file($_FILES['pdf']['tmp_name'], $percorsoDestinazione);
 
-        $utente = current_user();
-        $caricamentoId = Caricamento::create([
-            'tipo_documento' => $tipoDocumento,
-            'etichetta' => $tipoDocumento === 'busta_paga' ? $etichetta : null,
-            'mese' => $tipoDocumento === 'busta_paga' ? $mese : null,
-            'anno' => $anno,
-            'nome_file_originale' => $_FILES['pdf']['name'],
-            'percorso_file_originale' => $percorsoDestinazione,
-            'caricato_da' => $utente['id'],
-        ]);
+        if (!move_uploaded_file($_FILES['pdf']['tmp_name'], $percorsoDestinazione)) {
+            $errore = 'Impossibile salvare il file caricato. Riprova.';
+        } else {
+            $utente = current_user();
+            $caricamentoId = Caricamento::create([
+                'tipo_documento' => $tipoDocumento,
+                'etichetta' => $tipoDocumento === 'busta_paga' ? $etichetta : null,
+                'mese' => $tipoDocumento === 'busta_paga' ? $mese : null,
+                'anno' => $anno,
+                'nome_file_originale' => $_FILES['pdf']['name'],
+                'percorso_file_originale' => $percorsoDestinazione,
+                'caricato_da' => $utente['id'],
+            ]);
 
-        redirect('/portale-dipendenti/admin/elabora-caricamento.php?caricamento_id=' . $caricamentoId);
+            redirect('/portale-dipendenti/admin/elabora-caricamento.php?caricamento_id=' . $caricamentoId);
+        }
     }
 }
 
