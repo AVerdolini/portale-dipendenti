@@ -1,0 +1,18 @@
+{
+  "name": "azienda/portale-dipendenti",
+  "type": "project",
+  "description": "Portale Dipendenti - Employee portal for payslip management",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.2",
+    "smalot/pdfparser": "^2.0",
+    "setasign/fpdi": "^2.3",
+    "setasign/fpdi-fpdf": "^2.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "minimum-stability": "stable"
+}

@@ -1,1 +1,8 @@
 .superpowers/
+/vendor/
+/node_modules/
+/public/assets/css/output.css
+/storage/originali/*
+/storage/documenti/*
+!/storage/originali/.gitkeep
+!/storage/documenti/.gitkeep

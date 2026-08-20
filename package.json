@@ -1,0 +1,19 @@
+{
+  "name": "portale-dipendenti",
+  "version": "1.0.0",
+  "description": "Portale Dipendenti - Employee portal for payslip management",
+  "main": "index.php",
+  "scripts": {
+    "build:css": "tailwindcss -i ./public/assets/css/input.css -o ./public/assets/css/output.css",
+    "watch:css": "tailwindcss -i ./public/assets/css/input.css -o ./public/assets/css/output.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "proprietary",
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "daisyui": "^4.12.14",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.6"
+  }
+}
