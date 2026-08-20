@@ -21,6 +21,14 @@ function require_login(): array
     if ($utente === null || !$utente['attivo']) {
         redirect('/portale-dipendenti/login.php');
     }
+
+    $paginaCorrente = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    $consentiteConCambioPassword = ['cambia-password.php', 'logout.php'];
+
+    if ($utente['deve_cambiare_password'] && !in_array($paginaCorrente, $consentiteConCambioPassword, true)) {
+        redirect('/portale-dipendenti/cambia-password.php');
+    }
+
     return $utente;
 }
 
