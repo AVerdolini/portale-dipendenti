@@ -15,26 +15,27 @@ function layout_admin_inizio(string $titolo, string $paginaAttiva): void
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body class="min-h-screen bg-base-200">
-    <div class="flex">
-        <?php include __DIR__ . '/partials/nav-admin.php'; ?>
-        <div class="flex-1">
-            <div class="navbar bg-base-100 shadow-sm px-6">
-                <div class="flex-1 font-semibold"><?= htmlspecialchars($titolo) ?></div>
-                <div class="flex-none flex items-center gap-3">
-                    <span class="text-sm"><?= htmlspecialchars($utente['nome'] . ' ' . $utente['cognome']) ?></span>
-                    <a href="/portale-dipendenti/logout.php" class="btn btn-ghost btn-sm">Esci</a>
-                </div>
-            </div>
-            <main class="p-6">
+    <div class="navbar bg-base-100 shadow-sm px-6">
+        <div class="flex-1 flex items-center gap-4">
+            <a href="/portale-dipendenti/admin/dashboard.php" class="font-semibold text-lg">Portale Dipendenti</a>
+            <?php if ($paginaAttiva !== 'dashboard'): ?>
+                <span class="text-base-content/40">/</span>
+                <span class="text-base-content/70"><?= htmlspecialchars($titolo) ?></span>
+            <?php endif; ?>
+        </div>
+        <div class="flex-none flex items-center gap-3">
+            <span class="text-sm"><?= htmlspecialchars($utente['nome'] . ' ' . $utente['cognome']) ?></span>
+            <a href="/portale-dipendenti/logout.php" class="btn btn-ghost btn-sm">Esci</a>
+        </div>
+    </div>
+    <main class="p-6">
     <?php
 }
 
 function layout_admin_fine(): void
 {
     ?>
-            </main>
-        </div>
-    </div>
+    </main>
     <script src="/portale-dipendenti/public/assets/js/app.js"></script>
 </body>
 </html>

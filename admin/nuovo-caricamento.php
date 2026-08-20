@@ -64,59 +64,12 @@ layout_admin_inizio('Nuovo caricamento', 'nuovo-caricamento');
     <li class="step">Revisione</li>
 </ul>
 
-<?php if ($errore): ?>
-    <div class="alert alert-error mb-4"><?= htmlspecialchars($errore) ?></div>
-<?php endif; ?>
-
-<form method="post" enctype="multipart/form-data" class="card bg-base-100 shadow p-6 max-w-lg flex flex-col gap-4" id="form-caricamento">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-    <div>
-        <label class="label"><span class="label-text">Tipo documento</span></label>
-        <select name="tipo_documento" id="tipo_documento" class="select select-bordered w-full" required>
-            <option value="">Seleziona...</option>
-            <option value="busta_paga">Busta paga</option>
-            <option value="cu">CU</option>
-        </select>
-    </div>
-
-    <div id="campi-busta-paga" style="display:none">
-        <label class="label"><span class="label-text">Etichetta</span></label>
-        <select name="etichetta" class="select select-bordered w-full">
-            <option value="Cedolino">Cedolino</option>
-            <option value="13a mensilita">13ª mensilità</option>
-            <option value="14a mensilita">14ª mensilità</option>
-        </select>
-
-        <label class="label mt-2"><span class="label-text">Mese</span></label>
-        <select name="mese" class="select select-bordered w-full">
-            <?php for ($m = 1; $m <= 12; $m++): ?>
-                <option value="<?= $m ?>"><?= formatMese($m) ?></option>
-            <?php endfor; ?>
-        </select>
-    </div>
-
-    <div>
-        <label class="label"><span class="label-text">Anno</span></label>
-        <input type="number" name="anno" class="input input-bordered w-full" value="<?= date('Y') ?>" required>
-    </div>
-
-    <div>
-        <label class="label"><span class="label-text">File PDF cumulativo</span></label>
-        <input type="file" name="pdf" accept="application/pdf" class="file-input file-input-bordered w-full" required>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Avanti</button>
-</form>
-
-<script>
-$(function () {
-    function aggiornaCampiBustaPaga() {
-        var tipo = $('#tipo_documento').val();
-        $('#campi-busta-paga').toggle(tipo === 'busta_paga');
-    }
-    $('#tipo_documento').on('change', aggiornaCampiBustaPaga);
-    aggiornaCampiBustaPaga();
-});
-</script>
+<div class="card bg-base-100 shadow p-6 max-w-lg">
+    <?php
+    $formId = 'form-caricamento';
+    $action = '/portale-dipendenti/admin/nuovo-caricamento.php';
+    include __DIR__ . '/../templates/partials/form-nuovo-caricamento.php';
+    ?>
+</div>
 <?php
 layout_admin_fine();

@@ -1,40 +1,38 @@
 <?php
 // admin/dashboard.php
 require_once __DIR__ . '/../src/auth.php';
-require_once __DIR__ . '/../src/Caricamento.php';
 require_once __DIR__ . '/../templates/layout-admin.php';
 
 require_admin();
 
-$caricamentiRecenti = array_slice(Caricamento::all(), 0, 10);
-
 layout_admin_inizio('Dashboard', 'dashboard');
 ?>
-<div class="flex justify-between items-center mb-6">
-    <h1 class="text-xl font-semibold">Caricamenti recenti</h1>
-    <a href="/portale-dipendenti/admin/nuovo-caricamento.php" class="btn btn-primary">Nuovo caricamento</a>
-</div>
+<h1 class="text-xl font-semibold mb-6">Dashboard</h1>
 
-<table class="table bg-base-100 shadow">
-    <thead><tr><th>Data</th><th>Tipo</th><th>Etichetta</th><th>Periodo</th><th>Stato</th></tr></thead>
-    <tbody>
-    <?php foreach ($caricamentiRecenti as $c): ?>
-        <tr class="hover cursor-pointer" onclick="window.location='/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=<?= $c['id'] ?>'">
-            <td><?= htmlspecialchars($c['caricato_il']) ?></td>
-            <td><?= $c['tipo_documento'] === 'cu' ? 'CU' : 'Busta paga' ?></td>
-            <td><?= htmlspecialchars($c['etichetta'] ?? '—') ?></td>
-            <td><?= $c['mese'] !== null ? formatMese((int) $c['mese']) . ' ' : '' ?><?= $c['anno'] ?></td>
-            <td>
-                <span class="badge <?= $c['stato'] === 'completato' ? 'badge-success' : ($c['stato'] === 'con_errori' ? 'badge-warning' : 'badge-ghost') ?>">
-                    <?= htmlspecialchars($c['stato']) ?>
-                </span>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-    <?php if (empty($caricamentiRecenti)): ?>
-        <tr><td colspan="5" class="text-base-content/60">Nessun caricamento effettuato.</td></tr>
-    <?php endif; ?>
-    </tbody>
-</table>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <a href="/portale-dipendenti/admin/nuovo-caricamento.php" class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
+        <div class="card-body items-center text-center">
+            <span class="text-4xl mb-2">📤</span>
+            <h2 class="card-title">Nuovo caricamento</h2>
+            <p class="text-sm text-base-content/60">Carica un nuovo PDF cumulativo di buste paga o CU</p>
+        </div>
+    </a>
+
+    <a href="/portale-dipendenti/admin/caricamenti.php" class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
+        <div class="card-body items-center text-center">
+            <span class="text-4xl mb-2">📋</span>
+            <h2 class="card-title">Caricamenti</h2>
+            <p class="text-sm text-base-content/60">Storico completo dei caricamenti effettuati</p>
+        </div>
+    </a>
+
+    <a href="/portale-dipendenti/admin/dipendenti.php" class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
+        <div class="card-body items-center text-center">
+            <span class="text-4xl mb-2">👥</span>
+            <h2 class="card-title">Dipendenti</h2>
+            <p class="text-sm text-base-content/60">Gestione anagrafica e documenti dei dipendenti</p>
+        </div>
+    </a>
+</div>
 <?php
 layout_admin_fine();
