@@ -62,38 +62,43 @@ switch ($azione) {
 
     case 'sovrascrivi':
         $utenteMatch = Utente::findByCodiceFiscale((string) $pagina['cf_estratto']);
-        if ($utenteMatch !== null) {
-            $esistente = Documento::esisteAssociato(
-                (int) $utenteMatch['id'],
-                $caricamento['tipo_documento'],
-                $caricamento['etichetta'],
-                $caricamento['mese'] !== null ? (int) $caricamento['mese'] : null,
-                (int) $caricamento['anno']
-            );
-            $nomeFile = sprintf('doc_%d_%d_%s.pdf', $caricamento['id'], $utenteMatch['id'], uniqid());
-            $percorsoDestinazione = __DIR__ . '/../storage/documenti/' . $nomeFile;
-            PdfSplitter::estraiPagine(
-                $caricamento['percorso_file_originale'],
-                (int) $pagina['pagina_da'],
-                (int) $pagina['pagina_a'],
-                $percorsoDestinazione
-            );
-            if ($esistente !== null) {
-                Documento::sovrascrivi($esistente['id'], [
-                    'caricamento_id' => $caricamento['id'],
-                    'utente_id' => $utenteMatch['id'],
-                    'tipo_documento' => $caricamento['tipo_documento'],
-                    'etichetta' => $caricamento['etichetta'],
-                    'mese' => $caricamento['mese'],
-                    'anno' => $caricamento['anno'],
-                    'percorso_file' => $percorsoDestinazione,
-                    'pagina_da' => (int) $pagina['pagina_da'],
-                    'pagina_a' => (int) $pagina['pagina_a'],
-                    'netto_in_busta' => null,
-                    'stato' => 'associato',
-                ]);
-            }
+        $esistente = $utenteMatch !== null ? Documento::esisteAssociato(
+            (int) $utenteMatch['id'],
+            $caricamento['tipo_documento'],
+            $caricamento['etichetta'],
+            $caricamento['mese'] !== null ? (int) $caricamento['mese'] : null,
+            (int) $caricamento['anno']
+        ) : null;
+
+        if ($utenteMatch === null || $esistente === null) {
+            // Il conflitto non e' piu' valido al momento della POST (es. un altro
+            // admin ha gia' risolto il documento esistente, o doppia sottomissione).
+            // Non estrarre il PDF e non marcare la pagina come risolta: resta
+            // "in_attesa" cosi' l'admin puo' rivalutarla.
+            redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=sovrascrivi_fallito');
         }
+
+        $nomeFile = sprintf('doc_%d_%d_%s.pdf', $caricamento['id'], $utenteMatch['id'], uniqid());
+        $percorsoDestinazione = __DIR__ . '/../storage/documenti/' . $nomeFile;
+        PdfSplitter::estraiPagine(
+            $caricamento['percorso_file_originale'],
+            (int) $pagina['pagina_da'],
+            (int) $pagina['pagina_a'],
+            $percorsoDestinazione
+        );
+        Documento::sovrascrivi($esistente['id'], [
+            'caricamento_id' => $caricamento['id'],
+            'utente_id' => $utenteMatch['id'],
+            'tipo_documento' => $caricamento['tipo_documento'],
+            'etichetta' => $caricamento['etichetta'],
+            'mese' => $caricamento['mese'],
+            'anno' => $caricamento['anno'],
+            'percorso_file' => $percorsoDestinazione,
+            'pagina_da' => (int) $pagina['pagina_da'],
+            'pagina_a' => (int) $pagina['pagina_a'],
+            'netto_in_busta' => null,
+            'stato' => 'associato',
+        ]);
         PaginaNonAssociata::risolvi($paginaId, (int) $admin['id']);
         break;
 

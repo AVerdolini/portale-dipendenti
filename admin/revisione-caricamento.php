@@ -51,6 +51,10 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
     <li class="step step-primary">Revisione</li>
 </ul>
 
+<?php if (($_GET['errore'] ?? '') === 'sovrascrivi_fallito'): ?>
+    <div class="alert alert-error mb-4">Impossibile sovrascrivere: il conflitto non e' piu' valido (probabilmente gia' risolto). La pagina resta in attesa di revisione.</div>
+<?php endif; ?>
+
 <div class="grid grid-cols-2 gap-6">
     <div class="flex flex-col gap-6 overflow-y-auto" style="max-height: 75vh">
 
