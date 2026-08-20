@@ -25,6 +25,9 @@ try {
     header('Content-Disposition: inline; filename="anteprima.pdf"');
     header('Content-Length: ' . filesize($percorsoTemporaneo));
     readfile($percorsoTemporaneo);
+} catch (InvalidArgumentException $e) {
+    http_response_code(400);
+    exit('Richiesta non valida.');
 } finally {
     if (file_exists($percorsoTemporaneo)) {
         unlink($percorsoTemporaneo);
