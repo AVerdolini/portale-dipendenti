@@ -120,4 +120,24 @@ $(function () {
 });
 </script>
 <?php
+$documentiCu = Documento::perUtente((int) $utente['id'], 'cu');
+?>
+<div class="card bg-base-100 shadow">
+    <div class="card-body p-4">
+        <h2 class="font-semibold mb-2">CU</h2>
+        <?php if (empty($documentiCu)): ?>
+            <p class="text-sm text-base-content/60">Nessuna CU disponibile.</p>
+        <?php else: ?>
+            <ul class="flex flex-col gap-2">
+                <?php foreach ($documentiCu as $doc): ?>
+                    <li class="flex justify-between items-center">
+                        <span>CU <?= $doc['anno'] ?></span>
+                        <a href="/portale-dipendenti/scarica-documento.php?id=<?= $doc['id'] ?>" class="btn btn-xs btn-outline">Scarica</a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </div>
+</div>
+<?php
 layout_dipendente_fine('home');
