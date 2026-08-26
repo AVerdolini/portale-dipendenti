@@ -12,6 +12,8 @@ CREATE TABLE utenti (
     ruolo ENUM('admin', 'dipendente') NOT NULL DEFAULT 'dipendente',
     deve_cambiare_password TINYINT(1) NOT NULL DEFAULT 1,
     attivo TINYINT(1) NOT NULL DEFAULT 1,
+    tentativi_falliti INT NOT NULL DEFAULT 0,
+    bloccato_fino DATETIME NULL,
     creato_il DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
