@@ -27,16 +27,17 @@ $conflitti = [];
 $daRivedere = [];
 foreach ($paginePendenti as $pagina) {
     $utenteMatch = $pagina['cf_estratto'] !== null ? Utente::findByCodiceFiscale($pagina['cf_estratto']) : null;
-    $inConflitto = $utenteMatch !== null && Documento::esisteAssociato(
+    $documentoEsistente = $utenteMatch !== null ? Documento::esisteAssociatoConOrigine(
         (int) $utenteMatch['id'],
         $caricamento['tipo_documento'],
         $caricamento['etichetta'],
         $caricamento['mese'] !== null ? (int) $caricamento['mese'] : null,
         (int) $caricamento['anno']
-    ) !== null;
+    ) : null;
 
-    if ($inConflitto) {
+    if ($documentoEsistente !== null) {
         $pagina['utente_match'] = $utenteMatch;
+        $pagina['documento_esistente'] = $documentoEsistente;
         $conflitti[] = $pagina;
     } else {
         $daRivedere[] = $pagina;
@@ -45,11 +46,18 @@ foreach ($paginePendenti as $pagina) {
 
 layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
 ?>
-<ul class="steps w-full mb-6">
-    <li class="step step-primary">Tipo, periodo e file</li>
-    <li class="step step-primary">Elaborazione</li>
-    <li class="step step-primary">Revisione</li>
-</ul>
+<div class="card bg-base-100 shadow p-4 mb-6">
+    <div class="flex justify-between items-start">
+        <ul class="steps w-full">
+            <li class="step step-primary">Caricamento</li>
+            <li class="step step-primary">Revisione</li>
+        </ul>
+        <div class="flex gap-2 shrink-0 ml-4">
+            <a href="/portale-dipendenti/admin/scarica-originale.php?id=<?= $caricamentoId ?>" class="btn btn-sm btn-outline">Scarica originale</a>
+            <button type="button" class="btn btn-sm btn-outline btn-error" onclick="document.getElementById('modale-elimina-caricamento').showModal()">Elimina caricamento</button>
+        </div>
+    </div>
+</div>
 
 <?php if (($_GET['errore'] ?? '') === 'sovrascrivi_fallito'): ?>
     <div class="alert alert-error mb-4">Impossibile sovrascrivere: il conflitto non e' piu' valido (probabilmente gia' risolto). La pagina resta in attesa di revisione.</div>
@@ -67,7 +75,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
 <div class="grid grid-cols-2 gap-6">
     <div class="flex flex-col gap-6 overflow-y-auto" style="max-height: 75vh">
 
-        <div>
+        <div class="card bg-base-100 shadow p-4">
             <h2 class="font-semibold mb-2">Documenti associati (<?= count($documentiAssociati) ?>)</h2>
             <table class="table table-sm">
                 <thead><tr><th>Dipendente</th><th>Pagine</th><th>Netto</th></tr></thead>
@@ -86,7 +94,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
             </table>
         </div>
 
-        <div>
+        <div class="card bg-base-100 shadow p-4">
             <h2 class="font-semibold mb-2">Da rivedere (<?= count($daRivedere) ?>)</h2>
             <table class="table table-sm">
                 <thead><tr><th>Pagine</th><th>CF</th><th>Azioni</th></tr></thead>
@@ -96,25 +104,29 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                         <td><?= $pagina['pagina_da'] ?>-<?= $pagina['pagina_a'] ?></td>
                         <td><?= htmlspecialchars($pagina['cf_estratto'] ?? '(non trovato)') ?></td>
                         <td onclick="event.stopPropagation()">
-                            <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="flex gap-2 items-center">
-                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                                <input type="hidden" name="azione" value="assegna">
-                                <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
-                                <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
-                                <select name="utente_id" class="select select-bordered select-xs">
-                                    <?php foreach ($dipendenti as $d): ?>
-                                        <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['cognome'] . ' ' . $d['nome']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button type="submit" class="btn btn-xs btn-primary">Assegna</button>
-                            </form>
-                            <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="inline">
-                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                                <input type="hidden" name="azione" value="scarta_pagina">
-                                <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
-                                <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
-                                <button type="submit" class="btn btn-xs">Scarta</button>
-                            </form>
+                            <div class="flex gap-2 items-center">
+                                <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="flex gap-2 items-center">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                    <input type="hidden" name="azione" value="assegna">
+                                    <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
+                                    <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
+                                    <select name="utente_id" class="select select-bordered select-xs" required>
+                                        <option value="" selected disabled>Seleziona dipendente...</option>
+                                        <?php foreach ($dipendenti as $d): ?>
+                                            <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['cognome'] . ' ' . $d['nome']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="submit" class="btn btn-xs btn-primary">Assegna</button>
+                                </form>
+                                <div class="divider divider-horizontal mx-0"></div>
+                                <form method="post" action="/portale-dipendenti/admin/revisione-azione.php">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                    <input type="hidden" name="azione" value="scarta_pagina">
+                                    <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
+                                    <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
+                                    <button type="submit" class="btn btn-xs btn-outline">Scarta</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -126,15 +138,22 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
         </div>
 
         <?php if (!empty($conflitti)): ?>
-        <div>
+        <div class="card bg-base-100 shadow p-4">
             <h2 class="font-semibold mb-2">Conflitti (<?= count($conflitti) ?>)</h2>
             <table class="table table-sm">
-                <thead><tr><th>Pagine</th><th>Dipendente</th><th>Azioni</th></tr></thead>
+                <thead><tr><th>Pagine</th><th>Dipendente</th><th>Documento esistente</th><th>Azioni</th></tr></thead>
                 <tbody>
                 <?php foreach ($conflitti as $conflitto): ?>
+                    <?php $doc = $conflitto['documento_esistente']; ?>
                     <tr class="hover cursor-pointer riga-preview" data-src="/portale-dipendenti/anteprima-pagine.php?caricamento_id=<?= $caricamentoId ?>&pagina_da=<?= $conflitto['pagina_da'] ?>&pagina_a=<?= $conflitto['pagina_a'] ?>">
                         <td><?= $conflitto['pagina_da'] ?>-<?= $conflitto['pagina_a'] ?></td>
                         <td><?= htmlspecialchars($conflitto['utente_match']['cognome'] . ' ' . $conflitto['utente_match']['nome']) ?></td>
+                        <td onclick="event.stopPropagation()">
+                            <a href="/portale-dipendenti/scarica-documento.php?id=<?= $doc['id'] ?>&modo=inline" target="_blank" rel="noopener" class="link link-primary text-xs" title="Apri il documento gia' presente in una nuova scheda">
+                                <?= htmlspecialchars($doc['caricamento_nome_file']) ?>
+                            </a>
+                            <div class="text-xs text-base-content/60">caricato il <?= htmlspecialchars($doc['caricamento_caricato_il']) ?></div>
+                        </td>
                         <td onclick="event.stopPropagation()">
                             <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="inline">
                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
@@ -166,5 +185,27 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
     </div>
 </div>
 
+<dialog id="modale-elimina-caricamento" class="modal">
+    <div class="modal-box">
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="font-semibold text-lg mb-4">Elimina caricamento</h3>
+        <p class="text-sm text-error mb-3">
+            Elimina definitivamente questo caricamento (<?= htmlspecialchars($caricamento['nome_file_originale']) ?>): tutti i documenti generati, le pagine in attesa di revisione e i file PDF sul disco vengono rimossi. Non e' reversibile.
+        </p>
+        <form class="form-elimina-caricamento flex flex-col gap-2" data-azione="elimina">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+            <input type="hidden" name="id" value="<?= $caricamentoId ?>">
+            <input type="text" name="conferma" placeholder="Scrivi CANCELLA per confermare" autocomplete="off" class="input input-bordered input-error w-full">
+            <button type="submit" class="btn btn-error w-full" disabled>Elimina caricamento</button>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>chiudi</button>
+    </form>
+</dialog>
+
+<div id="toast-container" class="toast toast-end z-50"></div>
 <?php
 layout_admin_fine();

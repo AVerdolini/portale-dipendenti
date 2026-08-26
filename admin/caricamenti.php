@@ -6,63 +6,6 @@ require_once __DIR__ . '/../templates/layout-admin.php';
 
 require_admin();
 
-// Gestione submit del form "Nuovo caricamento" quando inviato dal modale di
-// questa pagina (stessa logica di validazione/creazione di nuovo-caricamento.php,
-// duplicata qui perche' l'azione del form del modale punta a questa pagina cosi'
-// che, in caso di errore, il modale possa riaprirsi con il messaggio senza un
-// redirect intermedio che perderebbe lo stato).
-require_once __DIR__ . '/../src/PdfExtractor.php';
-
-$erroreCaricamento = null;
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['azione_caricamento'])) {
-    csrf_verify();
-    $tipoDocumento = $_POST['tipo_documento'] ?? '';
-    $etichetta = $_POST['etichetta'] ?? null;
-    $mese = ($_POST['mese'] ?? '') !== '' ? (int) $_POST['mese'] : null;
-    $anno = (int) ($_POST['anno'] ?? 0);
-
-    if (!in_array($tipoDocumento, ['busta_paga', 'cu'], true)) {
-        $erroreCaricamento = 'Seleziona un tipo di documento valido.';
-    } elseif ($tipoDocumento === 'busta_paga' && !in_array($etichetta, ['Cedolino', '13a mensilita', '14a mensilita'], true)) {
-        $erroreCaricamento = 'Seleziona un\'etichetta valida per la busta paga.';
-    } elseif ($tipoDocumento === 'busta_paga' && ($mese < 1 || $mese > 12)) {
-        $erroreCaricamento = 'Seleziona un mese valido.';
-    } elseif ($anno < 2000 || $anno > 2100) {
-        $erroreCaricamento = 'Anno non valido.';
-    } elseif (!isset($_FILES['pdf']) || $_FILES['pdf']['error'] !== UPLOAD_ERR_OK) {
-        $erroreCaricamento = 'Carica un file PDF valido.';
-    } elseif (strtolower(pathinfo($_FILES['pdf']['name'], PATHINFO_EXTENSION)) !== 'pdf') {
-        $erroreCaricamento = 'Il file deve essere un PDF.';
-    } elseif ((new finfo(FILEINFO_MIME_TYPE))->file($_FILES['pdf']['tmp_name']) !== 'application/pdf') {
-        $erroreCaricamento = 'Il file non è un PDF valido.';
-    } else {
-        $cartellaOriginali = __DIR__ . '/../storage/originali';
-        if (!is_dir($cartellaOriginali)) {
-            mkdir($cartellaOriginali, 0755, true);
-        }
-        $nomeFile = uniqid('originale_', true) . '.pdf';
-        $percorsoDestinazione = $cartellaOriginali . '/' . $nomeFile;
-
-        if (!move_uploaded_file($_FILES['pdf']['tmp_name'], $percorsoDestinazione)) {
-            $erroreCaricamento = 'Impossibile salvare il file caricato. Riprova.';
-        } else {
-            $utente = current_user();
-            $caricamentoId = Caricamento::create([
-                'tipo_documento' => $tipoDocumento,
-                'etichetta' => $tipoDocumento === 'busta_paga' ? $etichetta : null,
-                'mese' => $tipoDocumento === 'busta_paga' ? $mese : null,
-                'anno' => $anno,
-                'nome_file_originale' => $_FILES['pdf']['name'],
-                'percorso_file_originale' => $percorsoDestinazione,
-                'caricato_da' => $utente['id'],
-            ]);
-
-            redirect('/portale-dipendenti/admin/elabora-caricamento.php?caricamento_id=' . $caricamentoId);
-        }
-    }
-}
-
 $tuttiICaricamenti = Caricamento::all();
 
 // Filtri (letti da querystring, applicati lato PHP sull'elenco completo).
@@ -92,15 +35,13 @@ $caricamentiFiltrati = array_filter($tuttiICaricamenti, function ($c) use ($filt
     return true;
 });
 
-$erroreModaleApri = $erroreCaricamento !== null;
-
 layout_admin_inizio('Caricamenti', 'caricamenti');
 ?>
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-xl font-semibold">Storico caricamenti</h1>
-    <button type="button" class="btn btn-primary" onclick="document.getElementById('modale-nuovo-caricamento').showModal()">
+    <a href="/portale-dipendenti/admin/nuovo-caricamento.php" class="btn btn-primary">
         Nuovo caricamento
-    </button>
+    </a>
 </div>
 
 <div class="collapse collapse-arrow bg-base-100 shadow mb-4" <?= $filtriAttivi ? 'open' : '' ?>>
@@ -163,7 +104,7 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
     <thead><tr><th>Data</th><th>Tipo</th><th>Etichetta</th><th>Periodo</th><th>Stato</th><th>File originale</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($caricamentiFiltrati as $c): ?>
-        <tr class="hover">
+        <tr class="hover" id="riga-caricamento-<?= $c['id'] ?>">
             <td><?= htmlspecialchars($c['caricato_il']) ?></td>
             <td><?= $c['tipo_documento'] === 'cu' ? 'CU' : 'Busta paga' ?></td>
             <td><?= htmlspecialchars($c['etichetta'] ?? '—') ?></td>
@@ -174,8 +115,10 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
                 </span>
             </td>
             <td><?= htmlspecialchars($c['nome_file_originale']) ?></td>
-            <td>
+            <td class="flex gap-2">
                 <a href="/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=<?= $c['id'] ?>" class="btn btn-xs">Apri</a>
+                <a href="/portale-dipendenti/admin/scarica-originale.php?id=<?= $c['id'] ?>" class="btn btn-xs btn-outline">Scarica originale</a>
+                <button type="button" class="btn btn-xs btn-outline btn-error" onclick="document.getElementById('modale-elimina-caricamento-<?= $c['id'] ?>').showModal()">Elimina</button>
             </td>
         </tr>
     <?php endforeach; ?>
@@ -185,23 +128,29 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
     </tbody>
 </table>
 
-<dialog id="modale-nuovo-caricamento" class="modal" <?= $erroreModaleApri ? 'open' : '' ?>>
-    <div class="modal-box">
-        <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+<?php foreach ($caricamentiFiltrati as $c): ?>
+    <dialog id="modale-elimina-caricamento-<?= $c['id'] ?>" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-semibold text-lg mb-4">Elimina caricamento</h3>
+            <p class="text-sm text-error mb-3">
+                Elimina definitivamente questo caricamento (<?= htmlspecialchars($c['nome_file_originale']) ?>): tutti i documenti generati, le pagine in attesa di revisione e i file PDF sul disco vengono rimossi. Non e' reversibile.
+            </p>
+            <form class="form-elimina-caricamento flex flex-col gap-2" data-azione="elimina">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                <input type="hidden" name="id" value="<?= $c['id'] ?>">
+                <input type="text" name="conferma" placeholder="Scrivi CANCELLA per confermare" autocomplete="off" class="input input-bordered input-error w-full">
+                <button type="submit" class="btn btn-error w-full" disabled>Elimina caricamento</button>
+            </form>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>chiudi</button>
         </form>
-        <h3 class="font-semibold text-lg mb-4">Nuovo caricamento</h3>
-        <?php
-        $errore = $erroreCaricamento;
-        $formId = 'form-caricamento-modale';
-        $action = '/portale-dipendenti/admin/caricamenti.php';
-        $campoExtra = '<input type="hidden" name="azione_caricamento" value="1">';
-        include __DIR__ . '/../templates/partials/form-nuovo-caricamento.php';
-        ?>
-    </div>
-    <form method="dialog" class="modal-backdrop">
-        <button>chiudi</button>
-    </form>
-</dialog>
+    </dialog>
+<?php endforeach; ?>
+
+<div id="toast-container" class="toast toast-end z-50"></div>
 <?php
 layout_admin_fine();

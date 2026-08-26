@@ -38,6 +38,25 @@ class Documento
         return $row ?: null;
     }
 
+    /**
+     * Come esisteAssociato(), ma include anche il nome del file originale e
+     * la data del caricamento da cui il documento in conflitto proviene —
+     * serve in revisione-caricamento.php per mostrare all'admin CON QUALE
+     * file esistente sta andando in conflitto, non solo che c'e' un conflitto.
+     */
+    public static function esisteAssociatoConOrigine(int $utenteId, string $tipoDocumento, ?string $etichetta, ?int $mese, int $anno): ?array
+    {
+        $stmt = db()->prepare(
+            'SELECT d.*, c.nome_file_originale AS caricamento_nome_file, c.caricato_il AS caricamento_caricato_il
+             FROM documenti d
+             JOIN caricamenti c ON c.id = d.caricamento_id
+             WHERE d.utente_id = ? AND d.tipo_documento = ? AND d.etichetta <=> ? AND d.mese <=> ? AND d.anno = ? AND d.stato = "associato"'
+        );
+        $stmt->execute([$utenteId, $tipoDocumento, $etichetta, $mese, $anno]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public static function perCaricamento(int $caricamentoId): array
     {
         $stmt = db()->prepare('SELECT d.*, u.nome, u.cognome FROM documenti d
