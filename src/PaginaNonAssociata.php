@@ -8,13 +8,14 @@ class PaginaNonAssociata
     {
         $stmt = db()->prepare(
             'INSERT INTO pagine_non_associate (caricamento_id, pagina_da, pagina_a, cf_estratto, stato)
-             VALUES (?, ?, ?, ?, "in_attesa")'
+             VALUES (?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $dati['caricamento_id'],
             $dati['pagina_da'],
             $dati['pagina_a'],
             $dati['cf_estratto'] ?? null,
+            $dati['stato'] ?? 'in_attesa',
         ]);
         return (int) db()->lastInsertId();
     }

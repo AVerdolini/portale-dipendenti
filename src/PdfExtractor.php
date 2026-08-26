@@ -10,10 +10,15 @@ class PdfExtractor
     // 2 digits, 1 letter, 3 digits, 1 letter.
     private const PATTERN_CF = '/\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b/';
 
-    // PLACEHOLDER pattern — verify and adjust against a real cumulative PDF
-    // (see "Punti da verificare con il primo PDF reale" in the design spec).
-    // Matches labels like "NETTO IN BUSTA € 1.720,00" or "NETTO A PAGARE 1.720,00".
-    private const PATTERN_NETTO = '/NETTO\s+(?:IN\s+BUSTA|A\s+PAGARE)\D{0,10}?([\d.]+,\d{2})/iu';
+    // Retuned against a real cumulative PDF (Zucchetti cedolino layout) — see
+    // "Punti da verificare con il primo PDF reale" in the design spec.
+    // In this layout the "NETTO DEL MESE" label and its value are printed in
+    // separate columns and end up far apart in the linearized page text, so
+    // matching the label directly doesn't work. The value itself is reliably
+    // recognizable instead: it's the one euro amount on the page printed
+    // alone on its own line as "1.901,00€" (amount immediately followed by
+    // the € sign, no other text on that line), just above the IBAN line.
+    private const PATTERN_NETTO = '/^[\t ]*([\d.]+,\d{2})€[\t ]*$/mu';
 
     public static function estraiTestoPerPagina(string $percorsoPdf): array
     {
@@ -26,6 +31,16 @@ class PdfExtractor
             $risultato[$indice + 1] = $pagina->getText();
         }
         return $risultato;
+    }
+
+    public static function paginaVuota(string $testoPagina): bool
+    {
+        // "Vuota" qui significa priva di qualunque contenuto testuale utile:
+        // niente lettere ne' cifre, solo spazi/interruzioni di riga (com'e'
+        // il testo estratto da una pagina completamente bianca del PDF
+        // cumulativo). Non usiamo trim() da solo perche' alcuni PDF lasciano
+        // whitespace non standard (es. \xA0) che trim() non rimuove.
+        return preg_match('/[\p{L}\p{N}]/u', $testoPagina) !== 1;
     }
 
     public static function estraiCodiceFiscale(string $testoPagina): ?string

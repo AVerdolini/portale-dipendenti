@@ -32,13 +32,31 @@ class ElaboraCaricamento
                     $utente = $blocco['cf'] !== null ? Utente::findByCodiceFiscale($blocco['cf']) : null;
 
                     if ($utente === null) {
+                        // Un blocco senza CF riconosciuto normalmente finisce in coda di
+                        // revisione manuale ("in_attesa"). Se pero' ogni pagina del blocco
+                        // e' completamente bianca (nessun CF perche' non c'e' proprio
+                        // testo, non perche' il pattern ha fallito) non serve intervento
+                        // umano: la scartiamo subito, come farebbe l'admin cliccando
+                        // "Scarta" in revisione-caricamento.php.
+                        $tutteVuote = true;
+                        for ($p = $blocco['pagina_da']; $p <= $blocco['pagina_a']; $p++) {
+                            if (!PdfExtractor::paginaVuota($testoPerPagina[$p] ?? '')) {
+                                $tutteVuote = false;
+                                break;
+                            }
+                        }
+
                         PaginaNonAssociata::create([
                             'caricamento_id' => $caricamentoId,
                             'pagina_da' => $blocco['pagina_da'],
                             'pagina_a' => $blocco['pagina_a'],
                             'cf_estratto' => $blocco['cf'],
+                            'stato' => $tutteVuote ? 'scartata' : 'in_attesa',
                         ]);
-                        $ciSonoErrori = true;
+
+                        if (!$tutteVuote) {
+                            $ciSonoErrori = true;
+                        }
                         db()->commit();
                         continue;
                     }
