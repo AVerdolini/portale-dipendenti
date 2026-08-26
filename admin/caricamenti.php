@@ -39,12 +39,12 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
 ?>
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-xl font-semibold">Storico caricamenti</h1>
-    <a href="/portale-dipendenti/admin/nuovo-caricamento.php" class="btn btn-primary">
+    <a href="/portale-dipendenti/admin/nuovo-caricamento.php" class="btn btn-primary transition-transform duration-150 active:scale-[0.98]">
         Nuovo caricamento
     </a>
 </div>
 
-<div class="collapse collapse-arrow bg-base-100 shadow mb-4" <?= $filtriAttivi ? 'open' : '' ?>>
+<div class="collapse collapse-arrow bg-base-100 rounded-xl shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] mb-4" <?= $filtriAttivi ? 'open' : '' ?>>
     <input type="checkbox" <?= $filtriAttivi ? 'checked' : '' ?>>
     <div class="collapse-title font-medium">
         Filtri<?= $filtriAttivi ? ' (attivi)' : '' ?>
@@ -100,7 +100,7 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
     </div>
 </div>
 
-<table class="table bg-base-100 shadow">
+<table class="table bg-base-100 rounded-xl shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)]">
     <thead><tr><th>Data</th><th>Tipo</th><th>Etichetta</th><th>Periodo</th><th>Stato</th><th>File originale</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($caricamentiFiltrati as $c): ?>

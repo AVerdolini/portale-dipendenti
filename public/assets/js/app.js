@@ -156,6 +156,38 @@ $(function () {
         });
     });
 
+    // Submit via fetch del form "Il mio profilo" (modale nella navbar
+    // admin, vedi templates/layout-admin.php): a differenza del modale
+    // "Modifica dipendente" non c'e' una riga di tabella da aggiornare, ma
+    // il nome mostrato nella navbar si' — altrimenti resterebbe quello
+    // vecchio finche' l'admin non ricarica la pagina. L'esito si mostra
+    // dentro al modale stesso (non nel toast globale) perche' questo
+    // modale e' disponibile anche su pagine senza #toast-container, es.
+    // admin/dashboard.php.
+    $(document).on('submit', '#form-profilo-admin', function (e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $modale = $form.closest('dialog.modal');
+        var $messaggio = $modale.find('.messaggio-azione');
+
+        $.ajax({
+            url: '/portale-dipendenti/admin/profilo-modifica.php',
+            method: 'POST',
+            data: $form.serialize(),
+            dataType: 'json'
+        }).done(function (risposta) {
+            if (!risposta.ok) {
+                $messaggio.html('<div class="alert alert-error text-sm mb-3">' + risposta.messaggio + '</div>');
+                return;
+            }
+
+            $messaggio.html('<div class="alert alert-success text-sm mb-3">' + risposta.messaggio + '</div>');
+            $('#nome-utente-navbar').text(risposta.nome + ' ' + risposta.cognome);
+        }).fail(function () {
+            $messaggio.html('<div class="alert alert-error text-sm mb-3">Errore di comunicazione con il server. Riprova.</div>');
+        });
+    });
+
     // Submit via fetch del form "Elimina caricamento" nel modale di
     // conferma (admin/caricamenti.php e admin/revisione-caricamento.php):
     // niente redirect, solo toast di conferma/errore. Nella pagina

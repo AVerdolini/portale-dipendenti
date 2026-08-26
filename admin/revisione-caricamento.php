@@ -46,7 +46,7 @@ foreach ($paginePendenti as $pagina) {
 
 layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
 ?>
-<div class="card bg-base-100 shadow p-4 mb-6">
+<div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-4 mb-6">
     <div class="flex justify-between items-start">
         <ul class="steps w-full">
             <li class="step step-primary">Caricamento</li>
@@ -75,7 +75,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
 <div class="grid grid-cols-2 gap-6">
     <div class="flex flex-col gap-6 overflow-y-auto" style="max-height: 75vh">
 
-        <div class="card bg-base-100 shadow p-4">
+        <div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-4">
             <h2 class="font-semibold mb-2">Documenti associati (<?= count($documentiAssociati) ?>)</h2>
             <table class="table table-sm">
                 <thead><tr><th>Dipendente</th><th>Pagine</th><th>Netto</th></tr></thead>
@@ -94,7 +94,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
             </table>
         </div>
 
-        <div class="card bg-base-100 shadow p-4">
+        <div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-4">
             <h2 class="font-semibold mb-2">Da rivedere (<?= count($daRivedere) ?>)</h2>
             <table class="table table-sm">
                 <thead><tr><th>Pagine</th><th>CF</th><th>Azioni</th></tr></thead>
@@ -138,7 +138,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
         </div>
 
         <?php if (!empty($conflitti)): ?>
-        <div class="card bg-base-100 shadow p-4">
+        <div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-4">
             <h2 class="font-semibold mb-2">Conflitti (<?= count($conflitti) ?>)</h2>
             <table class="table table-sm">
                 <thead><tr><th>Pagine</th><th>Dipendente</th><th>Documento esistente</th><th>Azioni</th></tr></thead>

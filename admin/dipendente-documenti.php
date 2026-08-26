@@ -19,11 +19,18 @@ $documenti = Documento::perUtente($dipendenteId);
 
 layout_admin_inizio('Documenti di ' . $dipendente['nome'], 'dipendenti');
 ?>
-<h1 class="text-xl font-semibold mb-6">
-    Documenti — <?= htmlspecialchars($dipendente['cognome'] . ' ' . $dipendente['nome']) ?>
-</h1>
+<div class="flex items-center gap-2 mb-6">
+    <a href="/portale-dipendenti/admin/dipendenti.php" class="btn btn-ghost btn-sm btn-square" aria-label="Torna ai dipendenti">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 6l-6 6 6 6" />
+        </svg>
+    </a>
+    <h1 class="text-xl font-semibold">
+        Documenti — <?= htmlspecialchars($dipendente['cognome'] . ' ' . $dipendente['nome']) ?>
+    </h1>
+</div>
 
-<table class="table bg-base-100 shadow">
+<table class="table bg-base-100 rounded-xl shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)]">
     <thead><tr><th>Tipo</th><th>Etichetta</th><th>Periodo</th><th>Netto</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($documenti as $doc): ?>

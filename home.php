@@ -12,10 +12,8 @@ layout_dipendente_inizio('Home', 'home');
 
 $nomeVisualizzato = trim($utente['nome']);
 ?>
-<div class="card bg-base-100 shadow mb-4">
-    <div class="card-body p-4">
-        <p class="text-lg">Ciao, <span class="font-semibold"><?= htmlspecialchars($nomeVisualizzato) ?></span> 👋</p>
-    </div>
+<div class="mb-4">
+    <p class="text-lg">Ciao, <span class="font-semibold"><?= htmlspecialchars($nomeVisualizzato) ?></span></p>
 </div>
 <?php
 
@@ -57,7 +55,7 @@ $mappaCarosolloVersoGrafico = array_map(function ($doc) use ($chiaviGrafico) {
     return $indice !== false ? $indice : null;
 }, $documentiBustaPaga);
 ?>
-<div class="card bg-base-100 shadow mb-4">
+<div class="rounded-2xl bg-base-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.15)] mb-4">
     <div class="card-body p-4">
         <?php if (count($valoriGrafico) > 1): ?>
             <?php
@@ -218,7 +216,7 @@ $(function () {
 <?php
 $documentiCu = Documento::perUtente((int) $utente['id'], 'cu');
 ?>
-<div class="card bg-base-100 shadow">
+<div class="rounded-2xl bg-base-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.15)]">
     <div class="card-body p-4">
         <h2 class="font-semibold mb-2">CU</h2>
         <?php if (empty($documentiCu)): ?>

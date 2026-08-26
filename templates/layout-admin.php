@@ -24,7 +24,9 @@ function layout_admin_inizio(string $titolo, string $paginaAttiva): void
             <?php endif; ?>
         </div>
         <div class="flex-none flex items-center gap-3">
-            <span class="text-sm"><?= htmlspecialchars($utente['nome'] . ' ' . $utente['cognome']) ?></span>
+            <button type="button" id="nome-utente-navbar" class="text-sm hover:text-primary transition-colors duration-150" onclick="document.getElementById('modale-profilo-admin').showModal()">
+                <?= htmlspecialchars($utente['nome'] . ' ' . $utente['cognome']) ?>
+            </button>
             <a href="/portale-dipendenti/logout.php" class="btn btn-ghost btn-sm">Esci</a>
         </div>
     </div>
@@ -34,8 +36,34 @@ function layout_admin_inizio(string $titolo, string $paginaAttiva): void
 
 function layout_admin_fine(): void
 {
+    $utente = current_user();
     ?>
     </main>
+
+    <dialog id="modale-profilo-admin" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-semibold text-lg mb-4">Il mio profilo</h3>
+            <div class="messaggio-azione"></div>
+
+            <form id="form-profilo-admin" class="flex flex-col gap-3 mb-3">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                <input type="text" name="nome" value="<?= htmlspecialchars($utente['nome']) ?>" placeholder="Nome" required class="input input-bordered w-full">
+                <input type="text" name="cognome" value="<?= htmlspecialchars($utente['cognome']) ?>" placeholder="Cognome" required class="input input-bordered w-full">
+                <input type="email" name="email" value="<?= htmlspecialchars($utente['email']) ?>" placeholder="Email" required class="input input-bordered w-full">
+                <input type="text" name="codice_fiscale" value="<?= htmlspecialchars($utente['codice_fiscale']) ?>" placeholder="Codice Fiscale" required maxlength="16" class="input input-bordered w-full">
+                <button type="submit" class="btn btn-primary transition-transform duration-150 active:scale-[0.98]">Salva</button>
+            </form>
+
+            <a href="/portale-dipendenti/cambia-password.php" class="btn btn-outline w-full">Cambia password</a>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>chiudi</button>
+        </form>
+    </dialog>
+
     <script src="/portale-dipendenti/public/assets/js/app.js"></script>
 </body>
 </html>

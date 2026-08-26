@@ -60,12 +60,12 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
 ?>
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-xl font-semibold">Dipendenti</h1>
-    <button type="button" class="btn btn-primary" onclick="document.getElementById('modale-nuovo-dipendente').showModal()">
+    <button type="button" class="btn btn-primary transition-transform duration-150 active:scale-[0.98]" onclick="document.getElementById('modale-nuovo-dipendente').showModal()">
         Nuovo dipendente
     </button>
 </div>
 
-<table class="table bg-base-100 shadow">
+<table class="table bg-base-100 rounded-xl shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)]">
     <thead><tr><th>Nome</th><th>Email</th><th>CF</th><th>Stato</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($dipendenti as $d): ?>

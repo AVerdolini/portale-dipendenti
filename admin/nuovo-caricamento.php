@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 layout_admin_inizio('Nuovo caricamento', 'nuovo-caricamento');
 ?>
-<div class="card bg-base-100 shadow p-4 mb-6">
+<div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-4 mb-6">
     <ul class="steps w-full">
         <li class="step step-primary">Caricamento</li>
         <li class="step">Revisione</li>
@@ -66,14 +66,14 @@ layout_admin_inizio('Nuovo caricamento', 'nuovo-caricamento');
 </div>
 
 <div class="flex flex-col lg:flex-row gap-6 items-start">
-    <div class="card bg-base-100 shadow p-6 w-full max-w-lg">
+    <div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-6 w-full max-w-lg">
         <?php
         $formId = 'form-caricamento';
         $action = '/portale-dipendenti/admin/nuovo-caricamento.php';
         include __DIR__ . '/../templates/partials/form-nuovo-caricamento.php';
         ?>
     </div>
-    <div class="card bg-base-100 shadow p-6 w-full max-w-md">
+    <div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-6 w-full max-w-md">
         <?php include __DIR__ . '/../templates/partials/info-caricamento.php'; ?>
     </div>
 </div>

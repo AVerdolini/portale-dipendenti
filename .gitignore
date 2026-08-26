@@ -6,3 +6,6 @@
 /storage/documenti/*
 !/storage/originali/.gitkeep
 !/storage/documenti/.gitkeep
+/.agents/
+/.claude/skills/
+/skills-lock.json
