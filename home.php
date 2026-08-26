@@ -10,6 +10,15 @@ $documentiBustaPaga = Documento::perUtente((int) $utente['id'], 'busta_paga');
 
 layout_dipendente_inizio('Home', 'home');
 
+$nomeVisualizzato = trim($utente['nome']);
+?>
+<div class="card bg-base-100 shadow mb-4">
+    <div class="card-body p-4">
+        <p class="text-lg">Ciao, <span class="font-semibold"><?= htmlspecialchars($nomeVisualizzato) ?></span> 👋</p>
+    </div>
+</div>
+<?php
+
 if (empty($documentiBustaPaga)) {
     echo '<div class="alert">Nessuna busta paga disponibile al momento.</div>';
     layout_dipendente_fine('home');
@@ -27,30 +36,41 @@ foreach ($documentiBustaPaga as $doc) {
     }
 }
 ksort($puntiPerMese);
+$chiaviGrafico = array_keys($puntiPerMese);
 $valoriGrafico = array_values($puntiPerMese);
-$eticheteGrafico = array_keys($puntiPerMese);
+// Etichette leggibili per l'asse ("Lug 2026" invece della chiave "2026-07"
+// usata solo per l'ordinamento).
+$eticheteGrafico = array_map(function ($chiave) {
+    [$anno, $mese] = explode('-', $chiave);
+    return mb_substr(formatMese((int) $mese), 0, 3) . ' ' . $anno;
+}, $chiaviGrafico);
 
-$larghezzaSvg = 300;
-$altezzaSvg = 60;
-$puntiSvg = [];
-$numPunti = count($valoriGrafico);
-if ($numPunti > 1) {
-    $min = min($valoriGrafico);
-    $max = max($valoriGrafico);
-    $range = ($max - $min) ?: 1;
-    foreach ($valoriGrafico as $i => $valore) {
-        $x = ($i / ($numPunti - 1)) * $larghezzaSvg;
-        $y = $altezzaSvg - (($valore - $min) / $range) * ($altezzaSvg - 10) - 5;
-        $puntiSvg[] = round($x, 1) . ',' . round($y, 1);
-    }
-}
+// Il carosello scorre su $documentiBustaPaga (un elemento per documento,
+// puo' averne piu' di uno nello stesso mese es. 13a/14a mensilita'), mentre
+// il grafico ha un punto per mese/anno aggregato: gli indici dei due non
+// coincidono. Questa mappa traduce "indice nel carosello" -> "indice nel
+// grafico dello stesso mese/anno", cosi' lo slide puo' evidenziare il punto
+// giusto anche quando i due elenchi non sono allineati 1 a 1.
+$mappaCarosolloVersoGrafico = array_map(function ($doc) use ($chiaviGrafico) {
+    $chiave = $doc['anno'] . '-' . str_pad((string) $doc['mese'], 2, '0', STR_PAD_LEFT);
+    $indice = array_search($chiave, $chiaviGrafico, true);
+    return $indice !== false ? $indice : null;
+}, $documentiBustaPaga);
 ?>
 <div class="card bg-base-100 shadow mb-4">
     <div class="card-body p-4">
-        <?php if (count($puntiSvg) > 1): ?>
-            <svg width="100%" height="<?= $altezzaSvg ?>" viewBox="0 0 <?= $larghezzaSvg ?> <?= $altezzaSvg ?>" preserveAspectRatio="none">
-                <polyline points="<?= implode(' ', $puntiSvg) ?>" fill="none" stroke="currentColor" stroke-width="2" />
-            </svg>
+        <?php if (count($valoriGrafico) > 1): ?>
+            <?php
+            // Chart.js con responsive:true + maintainAspectRatio:false ridisegna
+            // il canvas alla dimensione del suo contenitore: senza un'altezza CSS
+            // esplicita sul contenitore stesso (l'attributo height sul <canvas>
+            // viene ignorato in questa modalita'), il contenitore si adatta al
+            // contenuto e il canvas si adatta al contenitore in un loop di resize
+            // infinito — il grafico cresce senza fine, come nello screenshot.
+            ?>
+            <div style="height: 220px">
+                <canvas id="grafico-netto"></canvas>
+            </div>
         <?php endif; ?>
 
         <div class="overflow-x-auto snap-x snap-mandatory flex" id="carosello-buste-paga" style="scroll-snap-type: x mandatory;">
@@ -82,6 +102,7 @@ if ($numPunti > 1) {
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
 var documentiBustaPaga = <?= json_encode(array_map(fn($d) => [
     'id' => $d['id'],
@@ -90,10 +111,85 @@ var documentiBustaPaga = <?= json_encode(array_map(fn($d) => [
     'anno' => $d['anno'],
 ], $documentiBustaPaga)) ?>;
 
+<?php if (count($valoriGrafico) > 1): ?>
+var eticheteGraficoNetto = <?= json_encode($eticheteGrafico) ?>;
+var valoriGraficoNetto = <?= json_encode($valoriGrafico) ?>;
+// Traduce l'indice di un documento nel carosello nell'indice del punto
+// corrispondente nel grafico (i due elenchi possono non coincidere, vedi
+// commento PHP sopra su $mappaCarosolloVersoGrafico).
+var mappaCarosolloVersoGrafico = <?= json_encode($mappaCarosolloVersoGrafico) ?>;
+<?php endif; ?>
+
 $(function () {
+    <?php if (count($valoriGrafico) > 1): ?>
+    var coloreBase = '#4f39f6';
+    var coloreEvidenziato = '#f97316';
+    var numeroPunti = valoriGraficoNetto.length;
+
+    // Chart.js gestisce da solo lo scaling e disegna marker sempre visibili
+    // (a differenza di un SVG a mano stirato con preserveAspectRatio="none",
+    // dove un cerchio col raggio in unita' di viewBox si deformava in
+    // un'ellisse quasi invisibile). pointRadius/pointBackgroundColor sono
+    // passati come array (uno per punto, non un valore singolo) apposta:
+    // e' quello che permette a evidenziaPuntoGrafico() di ingrandire e
+    // ricolorare solo il marker del mese in vista nel carosello.
+    var graficoNetto = new Chart(document.getElementById('grafico-netto'), {
+        type: 'line',
+        data: {
+            labels: eticheteGraficoNetto,
+            datasets: [{
+                data: valoriGraficoNetto,
+                borderColor: coloreBase,
+                backgroundColor: coloreBase,
+                pointBackgroundColor: new Array(numeroPunti).fill(coloreBase),
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: new Array(numeroPunti).fill(5),
+                pointHoverRadius: 8,
+                tension: 0.2,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (contesto) {
+                            return contesto.parsed.y.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: { display: false },
+                x: { ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    function evidenziaPuntoGrafico(indiceGrafico) {
+        var dataset = graficoNetto.data.datasets[0];
+        dataset.pointBackgroundColor = new Array(numeroPunti).fill(coloreBase);
+        dataset.pointRadius = new Array(numeroPunti).fill(5);
+
+        if (indiceGrafico !== null && indiceGrafico !== undefined) {
+            dataset.pointBackgroundColor[indiceGrafico] = coloreEvidenziato;
+            dataset.pointRadius[indiceGrafico] = 8;
+        }
+        graficoNetto.update();
+    }
+    <?php endif; ?>
+
     function aggiornaIndicatore(indice) {
         $('.indicatore-punto').removeClass('bg-primary').addClass('bg-base-300');
         $('.indicatore-punto[data-indice="' + indice + '"]').removeClass('bg-base-300').addClass('bg-primary');
+
+        <?php if (count($valoriGrafico) > 1): ?>
+        evidenziaPuntoGrafico(mappaCarosolloVersoGrafico[indice]);
+        <?php endif; ?>
 
         var doc = documentiBustaPaga[indice];
         if (doc) {
