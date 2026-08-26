@@ -13,9 +13,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $utente = Utente::findByEmail($email);
 
-    if ($utente === null || !$utente['attivo'] || !Utente::verifyPassword($utente, $password)) {
+    if ($utente !== null && Utente::isBloccato($utente)) {
+        $errore = 'Troppi tentativi falliti. Riprova tra ' . Utente::minutiBloccoResidui($utente) . ' minuti.';
+    } elseif ($utente === null || !$utente['attivo'] || !Utente::verifyPassword($utente, $password)) {
+        // Il messaggio resta identico sia per email inesistente che per
+        // password sbagliata (non si rivela quale delle due e' corretta),
+        // ma il contatore tentativi si incrementa solo se l'utente esiste
+        // davvero — altrimenti non c'e' una riga su cui incrementarlo.
+        if ($utente !== null) {
+            Utente::registraTentativoFallito((int) $utente['id']);
+        }
         $errore = 'Email o password non corretti.';
     } else {
+        Utente::resetTentativiFalliti((int) $utente['id']);
         login_utente($utente);
         redirect('/portale-dipendenti/index.php');
     }

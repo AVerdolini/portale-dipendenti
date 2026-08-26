@@ -4,11 +4,21 @@ require_once __DIR__ . '/Utente.php';
 require_once __DIR__ . '/helpers.php';
 
 if (session_status() === PHP_SESSION_NONE) {
+    // 'secure' e' condizionato (non semplicemente true) per non rompere lo
+    // sviluppo locale su HTTP: PHP scarta silenziosamente un cookie 'secure'
+    // se la richiesta non e' HTTPS, quindi su XAMMP in locale la sessione
+    // non si salverebbe affatto. In produzione (HTTPS) il rilevamento sotto
+    // lo attiva automaticamente — nessuna modifica da fare al deploy.
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || ($_SERVER['SERVER_PORT'] ?? null) == 443
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'); // dietro reverse proxy/load balancer
+
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
         'httponly' => true,
         'samesite' => 'Strict',
+        'secure' => $isHttps,
     ]);
     session_start();
 }
