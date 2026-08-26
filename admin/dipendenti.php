@@ -77,6 +77,9 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
                 <span class="badge <?= $d['attivo'] ? 'badge-success' : 'badge-ghost' ?>">
                     <?= $d['attivo'] ? 'Attivo' : 'Disattivato' ?>
                 </span>
+                <?php if (Utente::isBloccato($d)): ?>
+                    <span class="badge badge-warning" title="Troppi tentativi di accesso falliti">Bloccato</span>
+                <?php endif; ?>
             </td>
             <td class="flex gap-2">
                 <button type="button" class="btn btn-xs" onclick="document.getElementById('modale-modifica-<?= $d['id'] ?>').showModal()">Modifica</button>
@@ -154,7 +157,7 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
                 <button type="submit" class="btn btn-outline w-full">Genera nuova password</button>
             </form>
 
-            <form class="form-azione-dipendente form-toggle-stato" data-azione="<?= $d['attivo'] ? 'disattiva' : 'attiva' ?>" data-successo="chiudi">
+            <form class="form-azione-dipendente form-toggle-stato mb-3" data-azione="<?= $d['attivo'] ? 'disattiva' : 'attiva' ?>" data-successo="chiudi">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                 <input type="hidden" name="id" value="<?= $d['id'] ?>">
                 <input type="hidden" name="azione" value="<?= $d['attivo'] ? 'disattiva' : 'attiva' ?>">
@@ -163,6 +166,27 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
                 <?php else: ?>
                     <button type="submit" class="btn btn-success btn-outline w-full">Riattiva</button>
                 <?php endif; ?>
+            </form>
+
+            <?php if (Utente::isBloccato($d)): ?>
+            <form class="form-azione-dipendente form-sblocca-login mb-3" data-azione="sblocca_login" data-successo="chiudi">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                <input type="hidden" name="id" value="<?= $d['id'] ?>">
+                <input type="hidden" name="azione" value="sblocca_login">
+                <p class="text-xs text-warning mb-2">Accesso bloccato per troppi tentativi falliti (si sblocca da solo tra <?= Utente::minutiBloccoResidui($d) ?> min).</p>
+                <button type="submit" class="btn btn-warning btn-outline w-full">Sblocca accesso ora</button>
+            </form>
+            <?php endif; ?>
+
+            <div class="divider"></div>
+
+            <form class="form-azione-dipendente form-elimina-dipendente flex flex-col gap-2" data-azione="elimina" data-successo="elimina">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                <input type="hidden" name="id" value="<?= $d['id'] ?>">
+                <input type="hidden" name="azione" value="elimina">
+                <p class="text-sm text-error">Elimina definitivamente il dipendente. Non e' reversibile e non e' possibile se ha documenti caricati.</p>
+                <input type="text" name="conferma" placeholder="Scrivi CANCELLA per confermare" autocomplete="off" class="input input-bordered input-error w-full">
+                <button type="submit" class="btn btn-error w-full" disabled>Elimina dipendente</button>
             </form>
         </div>
         <form method="dialog" class="modal-backdrop">

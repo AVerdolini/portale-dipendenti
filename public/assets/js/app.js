@@ -15,6 +15,41 @@ $(function () {
         $campiBustaPaga.toggle($(this).val() === 'busta_paga');
     });
 
+    // Il submit di "Nuovo caricamento" e' un classico POST -> redirect ->
+    // redirect lato server (salva il file, poi elabora-caricamento.php
+    // esegue l'estrazione/split PDF prima di arrivare a revisione-
+    // caricamento.php): tutto sincrono, senza feedback via AJAX. Per PDF con
+    // molte pagine puo' richiedere qualche secondo, durante i quali la
+    // pagina resterebbe apparentemente "congelata" senza spiegazioni.
+    // Mostriamo quindi un overlay a schermo intero al submit stesso (prima
+    // ancora che il browser inizi a navigare), cosi' l'admin capisce che il
+    // caricamento sta procedendo e non deve ricaricare o richiudere la scheda.
+    $(document).on('submit', '.form-nuovo-caricamento', function () {
+        var $overlay = $(this).siblings('.overlay-elaborazione');
+        // Lo style inline (non una classe Tailwind) e' voluto: "hidden" e
+        // "flex" generano entrambi una dichiarazione "display" con la
+        // stessa specificita', quindi vince quella dichiarata per ultima
+        // nel CSS compilato — non quella aggiunta per ultima all'elemento.
+        // Lo style inline invece ha sempre priorita' garantita, a prescindere
+        // dall'ordine di generazione del foglio.
+        $overlay.css('display', 'flex');
+        // Non e' necessario disabilitare il pulsante "Avanti": l'overlay
+        // copre l'intero form con z-50 e intercetta i click, quindi un
+        // secondo submit accidentale e' gia' impedito dall'interfaccia.
+    });
+
+    // Se l'admin naviga "indietro" dopo un submit, alcuni browser (Chrome,
+    // Firefox) ripristinano la pagina dalla bfcache esattamente com'era
+    // nel DOM al momento di lasciarla — overlay incluso, gia' mostrato da
+    // sopra — invece di ricaricarla da zero. Senza questo listener l'admin
+    // resterebbe bloccato a guardare lo spinner per sempre. "pageshow"
+    // scatta sia sul ripristino da bfcache (event.persisted === true) sia
+    // su un normale caricamento fresco, quindi nascondere sempre l'overlay
+    // qui e' corretto in entrambi i casi.
+    $(window).on('pageshow', function () {
+        $('.overlay-elaborazione').css('display', 'none');
+    });
+
     // Toast di conferma/errore, si chiude da solo dopo qualche secondo.
     function mostraToast(messaggio, tipo) {
         var classeAlert = tipo === 'errore' ? 'alert-error' : 'alert-success';
@@ -26,11 +61,20 @@ $(function () {
         }, 4000);
     }
 
+    // I pulsanti "Elimina dipendente"/"Elimina caricamento" restano
+    // disabilitati finche' l'admin non scrive esattamente "CANCELLA" nel
+    // campo di conferma accanto — una barriera volontaria in piu' oltre al
+    // normale submit, dato che l'azione e' distruttiva e irreversibile.
+    $(document).on('input', '.form-elimina-dipendente input[name="conferma"], .form-elimina-caricamento input[name="conferma"]', function () {
+        var $form = $(this).closest('form');
+        $form.find('button[type="submit"]').prop('disabled', $(this).val() !== 'CANCELLA');
+    });
+
     // Submit via fetch dei form azione-dipendente (aggiorna/reset_password/
-    // attiva/disattiva) nel modale "Modifica dipendente": niente redirect,
-    // solo toast di conferma/errore e aggiornamento della riga in tabella.
-    // La password generata ha un trattamento diverso: apre un modale
-    // dedicato che resta finche' l'admin non lo chiude esplicitamente.
+    // attiva/disattiva/elimina) nel modale "Modifica dipendente": niente
+    // redirect, solo toast di conferma/errore e aggiornamento della riga in
+    // tabella. La password generata ha un trattamento diverso: apre un
+    // modale dedicato che resta finche' l'admin non lo chiude esplicitamente.
     $(document).on('submit', '.form-azione-dipendente', function (e) {
         e.preventDefault();
         var $form = $(this);
@@ -52,6 +96,16 @@ $(function () {
                 $modaleModifica.get(0).close();
                 $('#valore-password-generata').val(risposta.password);
                 document.getElementById('modale-password-generata').showModal();
+                return;
+            }
+
+            if (successo === 'elimina') {
+                $modaleModifica.get(0).close();
+                mostraToast(risposta.messaggio || 'Dipendente eliminato.', 'successo');
+                // A differenza di aggiorna/attiva/disattiva la riga non va
+                // aggiornata ma rimossa: il dipendente non esiste piu'.
+                $('#riga-dipendente-' + risposta.id).fadeOut(200, function () { $(this).remove(); });
+                $modaleModifica.remove();
                 return;
             }
 
@@ -87,6 +141,59 @@ $(function () {
                     .toggleClass('btn-error', !attivo)
                     .toggleClass('btn-success', attivo)
                     .text(attivo ? 'Riattiva' : 'Disattiva');
+            } else if (risposta.azione === 'sblocca_login') {
+                // Il badge "Bloccato" e il form "Sblocca accesso ora" sono
+                // condizionali lato server (Utente::isBloccato()): non c'e'
+                // un "toggle" da fare come per attiva/disattiva, vanno solo
+                // rimossi dal DOM perche' non tornerebbero comunque a
+                // riapparire da soli finche' il dipendente non fallisce di
+                // nuovo il login abbastanza volte.
+                $riga.find('.cella-stato .badge-warning').remove();
+                $modaleModifica.find('.form-sblocca-login').remove();
+            }
+        }).fail(function () {
+            mostraToast('Errore di comunicazione con il server. Riprova.', 'errore');
+        });
+    });
+
+    // Submit via fetch del form "Elimina caricamento" nel modale di
+    // conferma (admin/caricamenti.php e admin/revisione-caricamento.php):
+    // niente redirect, solo toast di conferma/errore. Nella pagina
+    // caricamenti la riga sparisce dalla tabella; in revisione-caricamento
+    // (dove non c'e' una tabella di caricamenti da aggiornare) si torna
+    // invece allo storico, dato che la pagina che si sta guardando non
+    // esiste piu'.
+    $(document).on('submit', '.form-elimina-caricamento', function (e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $modale = $form.closest('dialog.modal');
+
+        $.ajax({
+            url: '/portale-dipendenti/admin/caricamento-elimina.php',
+            method: 'POST',
+            data: $form.serialize(),
+            dataType: 'json'
+        }).done(function (risposta) {
+            if (!risposta.ok) {
+                mostraToast(risposta.messaggio || 'Operazione non riuscita.', 'errore');
+                return;
+            }
+
+            var $riga = $('#riga-caricamento-' + risposta.id);
+            if ($riga.length) {
+                if ($modale.length) {
+                    $modale.get(0).close();
+                }
+                mostraToast(risposta.messaggio || 'Caricamento eliminato.', 'successo');
+                $riga.fadeOut(200, function () { $(this).remove(); });
+                if ($modale.length) {
+                    $modale.remove();
+                }
+            } else {
+                // Siamo in revisione-caricamento.php: la pagina corrente
+                // riguarda il caricamento appena eliminato, quindi non ha
+                // piu' senso restarci — si torna allo storico.
+                window.location.href = '/portale-dipendenti/admin/caricamenti.php';
             }
         }).fail(function () {
             mostraToast('Errore di comunicazione con il server. Riprova.', 'errore');

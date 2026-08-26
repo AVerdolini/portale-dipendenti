@@ -59,6 +59,22 @@ if ($azione === 'aggiorna') {
 } elseif ($azione === 'disattiva') {
     Utente::setAttivo($dipendenteId, false);
     rispondi(['ok' => true, 'azione' => 'disattiva', 'messaggio' => 'Dipendente disattivato.']);
+} elseif ($azione === 'sblocca_login') {
+    Utente::sbloccaLogin($dipendenteId);
+    rispondi(['ok' => true, 'azione' => 'sblocca_login', 'messaggio' => 'Accesso sbloccato.']);
+} elseif ($azione === 'elimina') {
+    $conferma = trim($_POST['conferma'] ?? '');
+
+    if ($conferma !== 'CANCELLA') {
+        rispondi(['ok' => false, 'messaggio' => 'Devi scrivere CANCELLA per confermare.']);
+    }
+
+    if (Utente::haDocumenti($dipendenteId)) {
+        rispondi(['ok' => false, 'messaggio' => 'Impossibile eliminare: il dipendente ha documenti caricati. Disattivalo invece.']);
+    }
+
+    Utente::delete($dipendenteId);
+    rispondi(['ok' => true, 'azione' => 'elimina', 'id' => $dipendenteId, 'messaggio' => 'Dipendente eliminato.']);
 }
 
 rispondi(['ok' => false, 'messaggio' => 'Azione non riconosciuta.'], 400);
