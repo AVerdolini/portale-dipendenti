@@ -14,12 +14,51 @@ csrf_verify();
 
 $azione = $_POST['azione'] ?? '';
 $caricamentoId = (int) ($_POST['caricamento_id'] ?? 0);
-$paginaId = (int) ($_POST['pagina_id'] ?? 0);
 
 $caricamento = Caricamento::findById($caricamentoId);
+if ($caricamento === null) {
+    http_response_code(404);
+    exit('Risorsa non trovata.');
+}
+
+// "modifica_netto" agisce su un Documento gia' associato, non su una pagina in
+// coda di revisione: gestita a parte, prima del blocco sotto che richiede una
+// PaginaNonAssociata valida (tutte le altre azioni operano su quella).
+if ($azione === 'modifica_netto') {
+    $documentoId = (int) ($_POST['documento_id'] ?? 0);
+    $documento = Documento::findById($documentoId);
+
+    if ($documento === null || (int) $documento['caricamento_id'] !== $caricamentoId) {
+        http_response_code(404);
+        exit('Documento non trovato.');
+    }
+
+    $nettoGrezzo = trim((string) ($_POST['netto'] ?? ''));
+    if ($nettoGrezzo === '') {
+        Documento::aggiornaNetto($documentoId, null);
+    } else {
+        // Stesso formato italiano gia' usato per l'estrazione automatica:
+        // migliaia "." decimali ",". Accettiamo anche il punto come separatore
+        // decimale (piu' naturale digitando da tastiera numerica) quando non
+        // c'e' ambiguita' con le migliaia.
+        $nettoNormalizzato = str_contains($nettoGrezzo, ',')
+            ? str_replace(',', '.', str_replace('.', '', $nettoGrezzo))
+            : $nettoGrezzo;
+
+        if (!is_numeric($nettoNormalizzato)) {
+            redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=netto_non_valido');
+        }
+
+        Documento::aggiornaNetto($documentoId, (float) $nettoNormalizzato);
+    }
+
+    redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId);
+}
+
+$paginaId = (int) ($_POST['pagina_id'] ?? 0);
 $pagina = PaginaNonAssociata::findById($paginaId);
 
-if ($caricamento === null || $pagina === null) {
+if ($pagina === null) {
     http_response_code(404);
     exit('Risorsa non trovata.');
 }

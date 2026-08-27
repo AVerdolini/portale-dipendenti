@@ -9,3 +9,6 @@
 /.agents/
 /.claude/skills/
 /skills-lock.json
+/config/pdf-tools.php
+/tools/tessdata/*
+!/tools/tessdata/.gitkeep

@@ -9,6 +9,24 @@ per il design completo.
 - XAMPP (Apache + PHP 8.2 + MySQL)
 - Composer
 - Node.js + npm
+- `poppler-utils` (comandi `pdftotext`, `pdftoppm`) e `tesseract-ocr` con il
+  pacchetto lingua italiano (`tesseract-ocr-ita`) — usati da `PdfExtractor` e
+  `OcrExtractor` per riconoscere i cedolini TeamSystem (allineamento a colonne
+  del testo) e come fallback OCR sui PDF scansionati/fotografati senza testo
+  nativo. Su Debian/Ubuntu (es. immagine Docker di produzione):
+  ```bash
+  sudo apt-get install poppler-utils tesseract-ocr tesseract-ocr-ita
+  ```
+  Su Windows (sviluppo locale) vanno installati manualmente, es. via winget:
+  `oschwartz10612.Poppler` e `UB-Mannheim.TesseractOCR`; il language pack
+  italiano non è incluso nell'installer Windows di Tesseract e va scaricato a
+  parte in `tools/tessdata/ita.traineddata` (vedi commento in
+  `src/OcrExtractor.php`), perché l'utente normale non ha permessi di
+  scrittura in `Program Files\Tesseract-OCR\tessdata`. Se questi binari non
+  sono disponibili, l'estrazione degrada silenziosamente (nessun errore): sui
+  cedolini TeamSystem l'euristica sul netto non ha il testo allineato a
+  colonne su cui contare, e le pagine scansionate senza testo restano prive di
+  CF/netto e finiscono nella coda di revisione manuale.
 
 ## Setup locale
 

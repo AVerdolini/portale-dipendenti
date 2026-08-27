@@ -99,6 +99,18 @@ class Documento
         $stmt->execute([$id]);
     }
 
+    /**
+     * Correzione manuale dell'admin per quando l'estrazione automatica del
+     * netto in busta ha fallito o ha preso un valore sbagliato (es. layout del
+     * cedolino non riconosciuto, OCR impreciso). $netto null azzera il valore
+     * (torna a "non disponibile" invece di mostrare un dato errato).
+     */
+    public static function aggiornaNetto(int $id, ?float $netto): void
+    {
+        $stmt = db()->prepare('UPDATE documenti SET netto_in_busta = ? WHERE id = ?');
+        $stmt->execute([$netto, $id]);
+    }
+
     public static function sovrascrivi(int $vecchioId, array $datiNuovo): int
     {
         self::scarta($vecchioId);

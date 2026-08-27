@@ -2,9 +2,34 @@
 // Shared jQuery helpers — populated in later tasks (carosello, preview loader).
 
 $(function () {
-    $(document).on('click', '.riga-preview', function () {
+    // Le celle azioni dentro una .riga-preview usano onclick="event.
+    // stopPropagation()" per evitare che un click su form/bottoni al loro
+    // interno apra anche l'anteprima PDF sul <tr>. Quello stop pero' blocca
+    // l'evento prima che risalga fino a document, dove sono agganciati gli
+    // handler delegati sotto (es. .btn-modifica-netto) — quindi controlliamo
+    // qui l'origine del click invece di affidarci allo stop nel markup.
+    $(document).on('click', '.riga-preview', function (e) {
+        if ($(e.target).closest('button, a, input, select, form').length > 0) {
+            return;
+        }
         var src = $(this).data('src');
         $('#preview-frame').attr('src', src);
+    });
+
+    // Toggle lettura/modifica del netto in busta in revisione-caricamento.php:
+    // di default mostra solo il valore + matita, il click sulla matita rivela
+    // il form (submit classico POST -> redirect, coerente con le altre azioni
+    // di questa pagina), "Annulla" lo richiude senza inviare nulla.
+    $(document).on('click', '.btn-modifica-netto', function () {
+        var $riga = $(this).closest('.riga-netto');
+        $riga.find('.valore-netto, .btn-modifica-netto').addClass('hidden');
+        $riga.find('.form-modifica-netto').removeClass('hidden');
+        $riga.find('input[name="netto"]').trigger('focus').trigger('select');
+    });
+    $(document).on('click', '.btn-annulla-netto', function () {
+        var $riga = $(this).closest('.riga-netto');
+        $riga.find('.form-modifica-netto').addClass('hidden');
+        $riga.find('.valore-netto, .btn-modifica-netto').removeClass('hidden');
     });
 
     // Mostra/nasconde i campi specifici busta paga (etichetta, mese) in base

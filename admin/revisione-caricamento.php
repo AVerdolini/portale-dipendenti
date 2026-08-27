@@ -71,24 +71,50 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
 <?php if (($_GET['errore'] ?? '') === 'elaborazione_fallita'): ?>
     <div class="alert alert-error mb-4">Si e' verificato un errore durante l'elaborazione del file caricato (potrebbe essere danneggiato o non valido). Il caricamento e' stato marcato come "con errori".</div>
 <?php endif; ?>
+<?php if (($_GET['errore'] ?? '') === 'netto_non_valido'): ?>
+    <div class="alert alert-error mb-4">Importo non valido: usa un numero (es. 1234,56). Il netto non e' stato modificato.</div>
+<?php endif; ?>
 
 <div class="grid grid-cols-2 gap-6">
     <div class="flex flex-col gap-6 overflow-y-auto" style="max-height: 75vh">
 
+        <?php $mostraNetto = $caricamento['tipo_documento'] === 'busta_paga'; ?>
         <div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-4">
             <h2 class="font-semibold mb-2">Documenti associati (<?= count($documentiAssociati) ?>)</h2>
             <table class="table table-sm">
-                <thead><tr><th>Dipendente</th><th>Pagine</th><th>Netto</th></tr></thead>
+                <thead><tr><th>Dipendente</th><th>Pagine</th><?php if ($mostraNetto): ?><th>Netto</th><?php endif; ?></tr></thead>
                 <tbody>
                 <?php foreach ($documentiAssociati as $doc): ?>
                     <tr class="hover cursor-pointer riga-preview" data-src="/portale-dipendenti/scarica-documento.php?id=<?= $doc['id'] ?>&modo=inline">
                         <td><?= htmlspecialchars($doc['cognome'] . ' ' . $doc['nome']) ?></td>
                         <td><?= $doc['pagina_da'] ?>-<?= $doc['pagina_a'] ?></td>
-                        <td><?= formatEuro($doc['netto_in_busta'] !== null ? (float) $doc['netto_in_busta'] : null) ?></td>
+                        <?php if ($mostraNetto): ?>
+                        <td>
+                            <div class="flex items-center gap-2 riga-netto" data-modalita="lettura">
+                                <span class="valore-netto"><?= formatEuro($doc['netto_in_busta'] !== null ? (float) $doc['netto_in_busta'] : null) ?></span>
+                                <button type="button" class="btn btn-2xs btn-ghost btn-modifica-netto" title="Modifica netto">✎</button>
+                                <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="form-modifica-netto hidden flex items-center gap-1">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                    <input type="hidden" name="azione" value="modifica_netto">
+                                    <input type="hidden" name="documento_id" value="<?= $doc['id'] ?>">
+                                    <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
+                                    <input
+                                        type="text"
+                                        name="netto"
+                                        class="input input-bordered input-xs w-24"
+                                        placeholder="es. 1234,56"
+                                        value="<?= $doc['netto_in_busta'] !== null ? htmlspecialchars(number_format((float) $doc['netto_in_busta'], 2, ',', '.')) : '' ?>"
+                                    >
+                                    <button type="submit" class="btn btn-2xs btn-primary">Salva</button>
+                                    <button type="button" class="btn btn-2xs btn-outline btn-annulla-netto">Annulla</button>
+                                </form>
+                            </div>
+                        </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
                 <?php if (empty($documentiAssociati)): ?>
-                    <tr><td colspan="3" class="text-base-content/60">Nessun documento associato.</td></tr>
+                    <tr><td colspan="<?= $mostraNetto ? 3 : 2 ?>" class="text-base-content/60">Nessun documento associato.</td></tr>
                 <?php endif; ?>
                 </tbody>
             </table>
