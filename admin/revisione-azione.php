@@ -46,13 +46,13 @@ if ($azione === 'modifica_netto') {
             : $nettoGrezzo;
 
         if (!is_numeric($nettoNormalizzato)) {
-            redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=netto_non_valido');
+            redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=netto_non_valido');
         }
 
         Documento::aggiornaNetto($documentoId, (float) $nettoNormalizzato);
     }
 
-    redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId);
+    redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId);
 }
 
 $paginaId = (int) ($_POST['pagina_id'] ?? 0);
@@ -121,7 +121,7 @@ switch ($azione) {
         if ($dipendenteAssegnato === null || !$dipendenteAssegnato['attivo']) {
             // Il dipendente selezionato non esiste piu' o e' stato disattivato
             // nel frattempo: non estrarre nulla, la pagina resta "in_attesa".
-            redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=assegna_dipendente_non_valido');
+            redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=assegna_dipendente_non_valido');
         }
 
         $conflittoAssegna = Documento::esisteAssociato(
@@ -137,7 +137,7 @@ switch ($azione) {
             // periodo: non estrarre il PDF e non marcare la pagina come
             // risolta, resta "in_attesa" cosi' l'admin puo' rivalutarla
             // (es. usando "sovrascrivi" dalla coda conflitti).
-            redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=assegna_conflitto');
+            redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=assegna_conflitto');
         }
 
         estraiEAssocia($caricamento, $pagina, $utenteId);
@@ -163,7 +163,7 @@ switch ($azione) {
             // admin ha gia' risolto il documento esistente, o doppia sottomissione).
             // Non estrarre il PDF e non marcare la pagina come risolta: resta
             // "in_attesa" cosi' l'admin puo' rivalutarla.
-            redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=sovrascrivi_fallito');
+            redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=sovrascrivi_fallito');
         }
 
         $nomeFile = sprintf('doc_%d_%d_%s.pdf', $caricamento['id'], $utenteMatch['id'], uniqid());
@@ -210,4 +210,4 @@ if (empty($paginePendentiRimaste)) {
     Caricamento::setStato($caricamentoId, 'completato');
 }
 
-redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId);
+redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId);

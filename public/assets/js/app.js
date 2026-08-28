@@ -107,7 +107,7 @@ $(function () {
         var successo = $form.data('successo');
 
         $.ajax({
-            url: '/portale-dipendenti/admin/dipendente-modifica.php',
+            url: '/admin/dipendente-modifica.php',
             method: 'POST',
             data: $form.serialize(),
             dataType: 'json'
@@ -196,7 +196,7 @@ $(function () {
         var $messaggio = $modale.find('.messaggio-azione');
 
         $.ajax({
-            url: '/portale-dipendenti/admin/profilo-modifica.php',
+            url: '/admin/profilo-modifica.php',
             method: 'POST',
             data: $form.serialize(),
             dataType: 'json'
@@ -226,7 +226,7 @@ $(function () {
         var $modale = $form.closest('dialog.modal');
 
         $.ajax({
-            url: '/portale-dipendenti/admin/caricamento-elimina.php',
+            url: '/admin/caricamento-elimina.php',
             method: 'POST',
             data: $form.serialize(),
             dataType: 'json'
@@ -250,7 +250,7 @@ $(function () {
                 // Siamo in revisione-caricamento.php: la pagina corrente
                 // riguarda il caricamento appena eliminato, quindi non ha
                 // piu' senso restarci — si torna allo storico.
-                window.location.href = '/portale-dipendenti/admin/caricamenti.php';
+                window.location.href = '/admin/caricamenti.php';
             }
         }).fail(function () {
             mostraToast('Errore di comunicazione con il server. Riprova.', 'errore');

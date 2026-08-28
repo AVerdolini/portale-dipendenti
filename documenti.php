@@ -49,7 +49,7 @@ layout_dipendente_inizio('Documenti', 'documenti');
                     </div>
                 </div>
             </div>
-            <a href="/portale-dipendenti/scarica-documento.php?id=<?= $doc['id'] ?>" class="btn btn-xs btn-outline">Scarica</a>
+            <a href="/scarica-documento.php?id=<?= $doc['id'] ?>" class="btn btn-xs btn-outline">Scarica</a>
         </li>
     <?php endforeach; ?>
     <?php if (empty($documentiFiltrati)): ?>

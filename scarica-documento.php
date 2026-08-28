@@ -2,6 +2,7 @@
 // scarica-documento.php
 require_once __DIR__ . '/src/auth.php';
 require_once __DIR__ . '/src/Documento.php';
+require_once __DIR__ . '/src/DocumentDownload.php';
 
 $utente = require_login();
 
@@ -15,7 +16,8 @@ if ($documento === null || $documento['stato'] !== 'associato') {
     exit('Documento non trovato.');
 }
 
-$autorizzato = $utente['ruolo'] === 'admin' || (int) $documento['utente_id'] === (int) $utente['id'];
+$isProprietario = (int) $documento['utente_id'] === (int) $utente['id'];
+$autorizzato = $utente['ruolo'] === 'admin' || $isProprietario;
 if (!$autorizzato) {
     http_response_code(403);
     exit('Accesso negato.');
@@ -24,6 +26,10 @@ if (!$autorizzato) {
 if (!file_exists($documento['percorso_file'])) {
     http_response_code(404);
     exit('File non disponibile.');
+}
+
+if ($utente['ruolo'] !== 'admin' && $isProprietario) {
+    DocumentDownload::registra($documentoId, (int) $utente['id']);
 }
 
 $nomeScaricato = sprintf(

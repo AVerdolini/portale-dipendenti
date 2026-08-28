@@ -193,7 +193,7 @@ $(function () {
         if (doc) {
             var $link = $('<a>', {
                 'class': 'btn btn-primary btn-sm w-full',
-                'href': '/portale-dipendenti/scarica-documento.php?id=' + encodeURIComponent(doc.id),
+                'href': '/scarica-documento.php?id=' + encodeURIComponent(doc.id),
                 'text': 'Scarica ' + (doc.etichetta || 'documento') + ' ' + doc.mese + '-' + doc.anno
             });
             $('#dettaglio-documento-corrente').empty().append($link);
@@ -226,7 +226,7 @@ $documentiCu = Documento::perUtente((int) $utente['id'], 'cu');
                 <?php foreach ($documentiCu as $doc): ?>
                     <li class="flex justify-between items-center">
                         <span>CU <?= $doc['anno'] ?></span>
-                        <a href="/portale-dipendenti/scarica-documento.php?id=<?= $doc['id'] ?>" class="btn btn-xs btn-outline">Scarica</a>
+                        <a href="/scarica-documento.php?id=<?= $doc['id'] ?>" class="btn btn-xs btn-outline">Scarica</a>
                     </li>
                 <?php endforeach; ?>
             </ul>

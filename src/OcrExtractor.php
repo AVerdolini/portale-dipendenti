@@ -32,6 +32,14 @@ class OcrExtractor
 {
     private const RISOLUZIONE_DPI = 300;
 
+    // Duplica PdfExtractor::PATTERN_CF (stesso formato standard del Codice
+    // Fiscale italiano): serve qui solo per decidere se tentare il fallback
+    // PSM di default in riconosciTesto(), non per l'estrazione vera e propria
+    // (che resta responsabilita' di PdfExtractor::raggruppaPerCf sul testo
+    // completo restituito). Duplicazione preferita a un accoppiamento fra le
+    // due classi solo per una regex.
+    private const PATTERN_CF = '/\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b/';
+
     /**
      * @return array{pdftotext:?string,pdftoppm:?string,tesseract:?string,tessdata_path:?string}
      */
@@ -184,6 +192,14 @@ class OcrExtractor
         return imagepng($ruotata, $destinazione);
     }
 
+    // Marcatore usato per separare, nel testo OCR restituito, la sezione
+    // --psm 6 (preferita per l'euristica del netto, vedi riconosciTesto())
+    // da quella di fallback in PSM di default (vedi cercaCfConPsmDefault()).
+    // Stesso scopo/pattern di PdfExtractor::SEPARATORE_SEZIONI: i pattern che
+    // devono restare sulla sola sezione --psm 6 (netto TeamSystem) tagliano il
+    // testo su questo marcatore, quello del CF invece cerca sull'intero blob.
+    private const SEPARATORE_SEZIONI = "\n\x00---FINE-SEZIONE-OCR-PSM6---\x00\n";
+
     private static function riconosciTesto(string $percorsoImmagine): string
     {
         // --psm 6 (singolo blocco di testo uniforme): verificato su cedolini
@@ -201,9 +217,33 @@ class OcrExtractor
             '-',
             '-l', 'ita',
             '--psm', '6',
-        ], ['TESSDATA_PREFIX' => self::tessdataPath()]);
+        ], ['TESSDATA_PREFIX' => self::tessdataPath()]) ?? '';
 
-        return $testo ?? '';
+        // Il CF compare spesso in una riga isolata fuori dal blocco tabellare
+        // principale (es. sopra l'intestazione della tabella competenze): il
+        // presupposto di --psm 6 (un unico blocco di testo uniforme) puo'
+        // "inghiottire" quella riga dentro il blocco tabellare e corromperla
+        // nel riconoscimento. Verificato su cedolino reale: --psm 6 non trova
+        // il CF che il PSM di default (segmentazione automatica multi-blocco,
+        // piu' lento ma piu' fedele su pagine con zone eterogenee) riconosce
+        // correttamente. Il secondo tentativo scatta SOLO se il primo non ha
+        // gia' un CF valido, per non pagare il costo doppio sul caso comune.
+        if (preg_match(self::PATTERN_CF, $testo) === 1) {
+            return $testo;
+        }
+
+        $testoPsmDefault = self::esegui([
+            self::comandoTesseract(),
+            $percorsoImmagine,
+            '-',
+            '-l', 'ita',
+        ], ['TESSDATA_PREFIX' => self::tessdataPath()]) ?? '';
+
+        if ($testoPsmDefault === '') {
+            return $testo;
+        }
+
+        return $testo . self::SEPARATORE_SEZIONI . $testoPsmDefault;
     }
 
     private static function comandoPdftoppm(): string
@@ -218,7 +258,15 @@ class OcrExtractor
 
     private static function tessdataPath(): ?string
     {
-        return self::config()['tessdata_path'] ?? (__DIR__ . '/../tools/tessdata');
+        // null (nessuna cartella esplicita in config/pdf-tools.php) lascia che
+        // tesseract usi il proprio default di sistema — corretto su Docker/Linux,
+        // dove tesseract-ocr-ita installa gia' ita.traineddata li'. Il fallback
+        // a tools/tessdata/ del repo va SOLO se quel path e' stato esplicitamente
+        // configurato (es. Windows, vedi config/pdf-tools.example.php), non come
+        // default silenzioso: altrimenti su Docker si punta a una cartella vuota
+        // (solo .gitkeep) invece che al path di sistema, e l'OCR fallisce senza
+        // errore visibile (proc_open ritorna solo "riuscito o no").
+        return self::config()['tessdata_path'] ?? null;
     }
 
     // pdftoppm (Poppler) non riconosce "--version" (lo interpreta come nome

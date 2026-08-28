@@ -20,8 +20,8 @@ if ($caricamento['stato'] === 'elaborazione') {
     } catch (\Throwable $e) {
         error_log('elabora-caricamento.php: elaborazione fallita per caricamento ' . $caricamentoId . ': ' . $e->getMessage());
         Caricamento::setStato($caricamentoId, 'con_errori');
-        redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=elaborazione_fallita');
+        redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId . '&errore=elaborazione_fallita');
     }
 }
 
-redirect('/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId);
+redirect('/admin/revisione-caricamento.php?caricamento_id=' . $caricamentoId);

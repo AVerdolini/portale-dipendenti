@@ -25,8 +25,8 @@ layout_dipendente_inizio('Menu', 'menu');
 </div>
 
 <div class="flex flex-col gap-2">
-    <a href="/portale-dipendenti/cambia-password.php" class="btn btn-outline w-full transition-all duration-150 active:scale-[0.98]">Cambia password</a>
-    <a href="/portale-dipendenti/logout.php" class="btn btn-error btn-outline w-full transition-all duration-150 active:scale-[0.98]">Esci</a>
+    <a href="/cambia-password.php" class="btn btn-outline w-full transition-all duration-150 active:scale-[0.98]">Cambia password</a>
+    <a href="/logout.php" class="btn btn-error btn-outline w-full transition-all duration-150 active:scale-[0.98]">Esci</a>
 </div>
 <?php
 layout_dipendente_fine('menu');

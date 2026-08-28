@@ -281,13 +281,24 @@ class PdfExtractor
                 continue;
             }
 
-            $eRigaDiSoliImporti = preg_match(
-                '/^(?:' . self::PATTERN_IMPORTO_SENZA_GRUPPO . '[\t ]*)+$/u',
-                $rigaSenzaSpazi
+            // Ancorato solo all'INIZIO riga (non piu' anche alla fine): l'OCR su
+            // layout tabellari fitti a volte concatena, dopo gli importi veri,
+            // rumore proveniente da altre zone della pagina che l'algoritmo di
+            // lettura ha letto come contigue (es. la legenda sigle sottostante),
+            // senza newline intermedio. Richiedere che l'INTERA riga sia fatta
+            // di soli importi scartava quindi righe che iniziano comunque con
+            // la sequenza numerica cercata. Il rischio di falso positivo (una
+            // riga di solo testo che inizia per caso con cifre in formato
+            // importo) resta basso quanto prima: il testo restante dopo gli
+            // importi non viene comunque interpretato come numero.
+            $iniziaConImporti = preg_match(
+                '/^(?:' . self::PATTERN_IMPORTO_SENZA_GRUPPO . '[\t ]*)+/u',
+                $rigaSenzaSpazi,
+                $matchPrefisso
             ) === 1;
 
-            if ($eRigaDiSoliImporti) {
-                preg_match_all(self::PATTERN_IMPORTO, $rigaSenzaSpazi, $matches);
+            if ($iniziaConImporti) {
+                preg_match_all(self::PATTERN_IMPORTO, $matchPrefisso[0], $matches);
                 $ultimoImportoTrovato = end($matches[1]);
                 $sequenzaIniziata = true;
                 continue;

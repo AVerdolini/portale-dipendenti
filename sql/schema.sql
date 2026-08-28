@@ -52,6 +52,17 @@ CREATE TABLE documenti (
     UNIQUE KEY uq_documento_periodo (utente_id_se_associato, tipo_documento, etichetta, mese, anno)
 ) ENGINE=InnoDB;
 
+CREATE TABLE document_downloads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    documento_id INT NOT NULL,
+    utente_id INT NOT NULL,
+    scaricato_il DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (documento_id) REFERENCES documenti(id),
+    FOREIGN KEY (utente_id) REFERENCES utenti(id),
+    INDEX idx_documento_id (documento_id),
+    INDEX idx_scaricato_il (scaricato_il)
+) ENGINE=InnoDB;
+
 CREATE TABLE pagine_non_associate (
     id INT AUTO_INCREMENT PRIMARY KEY,
     caricamento_id INT NOT NULL,

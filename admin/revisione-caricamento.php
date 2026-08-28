@@ -53,7 +53,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
             <li class="step step-primary">Revisione</li>
         </ul>
         <div class="flex gap-2 shrink-0 ml-4">
-            <a href="/portale-dipendenti/admin/scarica-originale.php?id=<?= $caricamentoId ?>" class="btn btn-sm btn-outline">Scarica originale</a>
+            <a href="/admin/scarica-originale.php?id=<?= $caricamentoId ?>" class="btn btn-sm btn-outline">Scarica originale</a>
             <button type="button" class="btn btn-sm btn-outline btn-error" onclick="document.getElementById('modale-elimina-caricamento').showModal()">Elimina caricamento</button>
         </div>
     </div>
@@ -85,7 +85,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                 <thead><tr><th>Dipendente</th><th>Pagine</th><?php if ($mostraNetto): ?><th>Netto</th><?php endif; ?></tr></thead>
                 <tbody>
                 <?php foreach ($documentiAssociati as $doc): ?>
-                    <tr class="hover cursor-pointer riga-preview" data-src="/portale-dipendenti/scarica-documento.php?id=<?= $doc['id'] ?>&modo=inline">
+                    <tr class="hover cursor-pointer riga-preview" data-src="/scarica-documento.php?id=<?= $doc['id'] ?>&modo=inline">
                         <td><?= htmlspecialchars($doc['cognome'] . ' ' . $doc['nome']) ?></td>
                         <td><?= $doc['pagina_da'] ?>-<?= $doc['pagina_a'] ?></td>
                         <?php if ($mostraNetto): ?>
@@ -93,7 +93,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                             <div class="flex items-center gap-2 riga-netto" data-modalita="lettura">
                                 <span class="valore-netto"><?= formatEuro($doc['netto_in_busta'] !== null ? (float) $doc['netto_in_busta'] : null) ?></span>
                                 <button type="button" class="btn btn-2xs btn-ghost btn-modifica-netto" title="Modifica netto">✎</button>
-                                <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="form-modifica-netto hidden flex items-center gap-1">
+                                <form method="post" action="/admin/revisione-azione.php" class="form-modifica-netto hidden flex items-center gap-1">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                     <input type="hidden" name="azione" value="modifica_netto">
                                     <input type="hidden" name="documento_id" value="<?= $doc['id'] ?>">
@@ -126,12 +126,12 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                 <thead><tr><th>Pagine</th><th>CF</th><th>Azioni</th></tr></thead>
                 <tbody>
                 <?php foreach ($daRivedere as $pagina): ?>
-                    <tr class="hover cursor-pointer riga-preview" data-src="/portale-dipendenti/anteprima-pagine.php?caricamento_id=<?= $caricamentoId ?>&pagina_da=<?= $pagina['pagina_da'] ?>&pagina_a=<?= $pagina['pagina_a'] ?>">
+                    <tr class="hover cursor-pointer riga-preview" data-src="/anteprima-pagine.php?caricamento_id=<?= $caricamentoId ?>&pagina_da=<?= $pagina['pagina_da'] ?>&pagina_a=<?= $pagina['pagina_a'] ?>">
                         <td><?= $pagina['pagina_da'] ?>-<?= $pagina['pagina_a'] ?></td>
                         <td><?= htmlspecialchars($pagina['cf_estratto'] ?? '(non trovato)') ?></td>
                         <td onclick="event.stopPropagation()">
                             <div class="flex gap-2 items-center">
-                                <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="flex gap-2 items-center">
+                                <form method="post" action="/admin/revisione-azione.php" class="flex gap-2 items-center">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                     <input type="hidden" name="azione" value="assegna">
                                     <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
@@ -145,7 +145,7 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                                     <button type="submit" class="btn btn-xs btn-primary">Assegna</button>
                                 </form>
                                 <div class="divider divider-horizontal mx-0"></div>
-                                <form method="post" action="/portale-dipendenti/admin/revisione-azione.php">
+                                <form method="post" action="/admin/revisione-azione.php">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                     <input type="hidden" name="azione" value="scarta_pagina">
                                     <input type="hidden" name="pagina_id" value="<?= $pagina['id'] ?>">
@@ -171,24 +171,24 @@ layout_admin_inizio('Revisione caricamento', 'nuovo-caricamento');
                 <tbody>
                 <?php foreach ($conflitti as $conflitto): ?>
                     <?php $doc = $conflitto['documento_esistente']; ?>
-                    <tr class="hover cursor-pointer riga-preview" data-src="/portale-dipendenti/anteprima-pagine.php?caricamento_id=<?= $caricamentoId ?>&pagina_da=<?= $conflitto['pagina_da'] ?>&pagina_a=<?= $conflitto['pagina_a'] ?>">
+                    <tr class="hover cursor-pointer riga-preview" data-src="/anteprima-pagine.php?caricamento_id=<?= $caricamentoId ?>&pagina_da=<?= $conflitto['pagina_da'] ?>&pagina_a=<?= $conflitto['pagina_a'] ?>">
                         <td><?= $conflitto['pagina_da'] ?>-<?= $conflitto['pagina_a'] ?></td>
                         <td><?= htmlspecialchars($conflitto['utente_match']['cognome'] . ' ' . $conflitto['utente_match']['nome']) ?></td>
                         <td onclick="event.stopPropagation()">
-                            <a href="/portale-dipendenti/scarica-documento.php?id=<?= $doc['id'] ?>&modo=inline" target="_blank" rel="noopener" class="link link-primary text-xs" title="Apri il documento gia' presente in una nuova scheda">
+                            <a href="/scarica-documento.php?id=<?= $doc['id'] ?>&modo=inline" target="_blank" rel="noopener" class="link link-primary text-xs" title="Apri il documento gia' presente in una nuova scheda">
                                 <?= htmlspecialchars($doc['caricamento_nome_file']) ?>
                             </a>
                             <div class="text-xs text-base-content/60">caricato il <?= htmlspecialchars($doc['caricamento_caricato_il']) ?></div>
                         </td>
                         <td onclick="event.stopPropagation()">
-                            <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="inline">
+                            <form method="post" action="/admin/revisione-azione.php" class="inline">
                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <input type="hidden" name="azione" value="sovrascrivi">
                                 <input type="hidden" name="pagina_id" value="<?= $conflitto['id'] ?>">
                                 <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">
                                 <button type="submit" class="btn btn-xs btn-warning">Sovrascrivi</button>
                             </form>
-                            <form method="post" action="/portale-dipendenti/admin/revisione-azione.php" class="inline">
+                            <form method="post" action="/admin/revisione-azione.php" class="inline">
                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                                 <input type="hidden" name="azione" value="ignora"><input type="hidden" name="pagina_id" value="<?= $conflitto['id'] ?>">
                                 <input type="hidden" name="caricamento_id" value="<?= $caricamentoId ?>">

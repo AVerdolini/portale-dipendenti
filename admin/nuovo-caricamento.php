@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'caricato_da' => $utente['id'],
             ]);
 
-            redirect('/portale-dipendenti/admin/elabora-caricamento.php?caricamento_id=' . $caricamentoId);
+            redirect('/admin/elabora-caricamento.php?caricamento_id=' . $caricamentoId);
         }
     }
 }
@@ -69,7 +69,7 @@ layout_admin_inizio('Nuovo caricamento', 'nuovo-caricamento');
     <div class="rounded-2xl bg-base-100 shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)] p-6 w-full max-w-lg">
         <?php
         $formId = 'form-caricamento';
-        $action = '/portale-dipendenti/admin/nuovo-caricamento.php';
+        $action = '/admin/nuovo-caricamento.php';
         include __DIR__ . '/../templates/partials/form-nuovo-caricamento.php';
         ?>
     </div>

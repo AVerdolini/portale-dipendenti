@@ -39,7 +39,7 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
 ?>
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-xl font-semibold">Storico caricamenti</h1>
-    <a href="/portale-dipendenti/admin/nuovo-caricamento.php" class="btn btn-primary transition-transform duration-150 active:scale-[0.98]">
+    <a href="/admin/nuovo-caricamento.php" class="btn btn-primary transition-transform duration-150 active:scale-[0.98]">
         Nuovo caricamento
     </a>
 </div>
@@ -93,7 +93,7 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
             <div class="col-span-2 md:col-span-5 flex gap-2">
                 <button type="submit" class="btn btn-sm btn-primary">Applica filtri</button>
                 <?php if ($filtriAttivi): ?>
-                    <a href="/portale-dipendenti/admin/caricamenti.php" class="btn btn-sm btn-ghost">Azzera</a>
+                    <a href="/admin/caricamenti.php" class="btn btn-sm btn-ghost">Azzera</a>
                 <?php endif; ?>
             </div>
         </form>
@@ -116,8 +116,8 @@ layout_admin_inizio('Caricamenti', 'caricamenti');
             </td>
             <td><?= htmlspecialchars($c['nome_file_originale']) ?></td>
             <td class="flex gap-2">
-                <a href="/portale-dipendenti/admin/revisione-caricamento.php?caricamento_id=<?= $c['id'] ?>" class="btn btn-xs">Apri</a>
-                <a href="/portale-dipendenti/admin/scarica-originale.php?id=<?= $c['id'] ?>" class="btn btn-xs btn-outline">Scarica originale</a>
+                <a href="/admin/revisione-caricamento.php?caricamento_id=<?= $c['id'] ?>" class="btn btn-xs">Apri</a>
+                <a href="/admin/scarica-originale.php?id=<?= $c['id'] ?>" class="btn btn-xs btn-outline">Scarica originale</a>
                 <button type="button" class="btn btn-xs btn-outline btn-error" onclick="document.getElementById('modale-elimina-caricamento-<?= $c['id'] ?>').showModal()">Elimina</button>
             </td>
         </tr>

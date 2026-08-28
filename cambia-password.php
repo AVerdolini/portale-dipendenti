@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errore = 'Le due password non coincidono.';
     } else {
         Utente::setPassword((int) $utente['id'], $nuova, false);
-        redirect('/portale-dipendenti/index.php');
+        redirect('/index.php');
     }
 }
 ?>
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cambia password — Portale Dipendenti</title>
-    <link rel="stylesheet" href="/portale-dipendenti/public/assets/css/output.css">
+    <link rel="stylesheet" href="/public/assets/css/output.css">
 </head>
 <body class="min-h-screen flex items-center justify-center bg-base-200">
     <div class="w-full max-w-sm">

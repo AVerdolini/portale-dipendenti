@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['azione'] ?? '') === 'crea'
             'password_temporanea' => $risultato['password_temporanea'],
             'nome_completo' => "$nome $cognome",
         ];
-        redirect('/portale-dipendenti/admin/dipendenti.php');
+        redirect('/admin/dipendenti.php');
     }
 }
 
@@ -83,7 +83,7 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
             </td>
             <td class="flex gap-2">
                 <button type="button" class="btn btn-xs" onclick="document.getElementById('modale-modifica-<?= $d['id'] ?>').showModal()">Modifica</button>
-                <a href="/portale-dipendenti/admin/dipendente-documenti.php?id=<?= $d['id'] ?>" class="btn btn-xs">Documenti</a>
+                <a href="/admin/dipendente-documenti.php?id=<?= $d['id'] ?>" class="btn btn-xs">Documenti</a>
             </td>
         </tr>
     <?php endforeach; ?>

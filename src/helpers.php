@@ -45,6 +45,27 @@ function generaPasswordTemporanea(int $lunghezza = 10): string
     return $password;
 }
 
+function formatTempoFa(string $dataOra): string
+{
+    $secondi = time() - strtotime($dataOra);
+    if ($secondi < 60) {
+        return 'Adesso';
+    }
+    $minuti = (int) floor($secondi / 60);
+    if ($minuti < 60) {
+        return $minuti . ($minuti === 1 ? ' minuto fa' : ' minuti fa');
+    }
+    $ore = (int) floor($minuti / 60);
+    if ($ore < 24) {
+        return $ore . ($ore === 1 ? ' ora fa' : ' ore fa');
+    }
+    $giorni = (int) floor($ore / 24);
+    if ($giorni < 30) {
+        return $giorni . ($giorni === 1 ? ' giorno fa' : ' giorni fa');
+    }
+    return date('d/m/Y', strtotime($dataOra));
+}
+
 function csrf_token(): string
 {
     if (empty($_SESSION['csrf_token'])) {
