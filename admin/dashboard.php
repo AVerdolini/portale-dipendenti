@@ -59,7 +59,7 @@ layout_admin_inizio('Dashboard', 'dashboard');
     </div>
 </div>
 
-<div class="mt-8">
+<div class="mt-8 max-w-xl">
     <h2 class="font-medium mb-3">Ultimi download</h2>
     <div class="rounded-2xl bg-base-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.15)] divide-y divide-base-200">
         <?php foreach ($downloadRecenti as $riga): ?>

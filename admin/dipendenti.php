@@ -60,9 +60,13 @@ layout_admin_inizio('Dipendenti', 'dipendenti');
 ?>
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-xl font-semibold">Dipendenti</h1>
-    <button type="button" class="btn btn-primary transition-transform duration-150 active:scale-[0.98]" onclick="document.getElementById('modale-nuovo-dipendente').showModal()">
-        Nuovo dipendente
-    </button>
+    <div class="flex gap-2">
+        <a href="/admin/dipendenti-esporta.php" class="btn btn-ghost">Esporta</a>
+        <a href="/admin/dipendenti-importa.php" class="btn btn-ghost">Importa</a>
+        <button type="button" class="btn btn-primary transition-transform duration-150 active:scale-[0.98]" onclick="document.getElementById('modale-nuovo-dipendente').showModal()">
+            Nuovo dipendente
+        </button>
+    </div>
 </div>
 
 <table class="table bg-base-100 rounded-xl shadow-[0_1px_6px_-2px_rgba(0,0,0,0.12)]">
